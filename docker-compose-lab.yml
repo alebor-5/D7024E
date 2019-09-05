@@ -1,7 +1,7 @@
 version: "3"
 services:
   kademliaNodes:
-    image: larjim/kademlialab:latest
+    image: testimage
     stdin_open: true
     tty: true
     deploy:
