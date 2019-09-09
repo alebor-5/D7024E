@@ -5,18 +5,24 @@ import (
 	"time"
 	"log"
 	"net"
+	"strings"
 )
 // Get preferred outbound ip of this machine
-func GetOutboundIP() net.IP {
-    conn, err := net.Dial("udp", "8.8.8.8:80")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer conn.Close()
+func GetOutboundIP() string {
+	ip := "0.0.0.0"
+	interfaces, _ := net.Interfaces()
+	for _,i  := range interfaces{
+		byNameInterface, _ := net.InterfaceByName(i.Name)
+		if i.Name == "eth0" {
+			addresses, _ := byNameInterface.Addrs()
+			for _, v := range addresses{
+				ip = strings.TrimSuffix(v.String(), "/24")
+			}	
+		}
 
-    localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-    return localAddr.IP
+	}
+	return ip
+	
 }
 
 func handleUDPConnection(conn *net.UDPConn) {
@@ -51,7 +57,7 @@ func handleUDPConnection(conn *net.UDPConn) {
 func server() {
 	outboundIP := GetOutboundIP()
 	fmt.Println(outboundIP)
-	 hostName := "localhost" 
+	 hostName := outboundIP 
          portNum := "6000"
          service := hostName + ":" + portNum
 
@@ -144,3 +150,4 @@ func main(){
 	}
 
 }
+
