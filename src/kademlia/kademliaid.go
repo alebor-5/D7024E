@@ -1,8 +1,9 @@
-package d7024e
+package main
 
 import (
 	"encoding/hex"
 	"math/rand"
+	"fmt"
 )
 
 // the static number of bytes in a KademliaID
@@ -13,9 +14,10 @@ type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
+	fmt.Println(data)
 	decoded, _ := hex.DecodeString(data)
-
 	newKademliaID := KademliaID{}
+	fmt.Println(len(decoded))
 	for i := 0; i < IDLength; i++ {
 		newKademliaID[i] = decoded[i]
 	}
