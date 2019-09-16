@@ -9,7 +9,7 @@ type Kademlia struct {
 	ip string
 }
 
-func NewKademliaNode() Kademlia {
+func InitKademliaNode() Kademlia {
 	id := NewKademliaID("48656c6c6f2066726f6d2041444d466163746f72792e636f6d")
 	return  Kademlia{*id, GetIP() }
 }
