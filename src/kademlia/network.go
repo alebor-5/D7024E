@@ -28,14 +28,14 @@ func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
 }
 
-func GetIP() string{
+func GetIP() string {
 	ip := "0.0.0.0"
 	interfaces, _ := net.Interfaces()
-	for _,i  := range interfaces{
+	for _, i := range interfaces {
 		byNameInterface, _ := net.InterfaceByName(i.Name)
 		if i.Name == "eth0" {
 			addresses, _ := byNameInterface.Addrs()
-			for _, v := range addresses{
+			for _, v := range addresses {
 				ip = strings.TrimSuffix(v.String(), "/24")
 			}
 		}

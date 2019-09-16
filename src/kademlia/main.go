@@ -4,9 +4,7 @@ import (
 	"time"
 )
 
-
-
-func main(){
+func main() {
 	for {
 		time.Sleep(time.Second)
 		/*fmt.Println("Enter 0 for client and 1 for server")
@@ -22,4 +20,3 @@ func main(){
 	}
 
 }
-
