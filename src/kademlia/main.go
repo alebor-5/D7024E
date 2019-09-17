@@ -17,8 +17,8 @@ func main() {
 		}*/
 		node := InitKademliaNode()
 		node.PrintIP()
-		c1 := NewContact(NewRandomKademliaID(),"localhost")
-		SendPONG(c1)	
+		//c1 := NewContact(NewRandomKademliaID(),"localhost")
+		//SendPONG(c1)	
 	}
 
 }
