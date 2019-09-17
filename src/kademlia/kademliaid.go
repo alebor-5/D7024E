@@ -2,14 +2,14 @@ package main
 
 import (
 	"encoding/hex"
-	"math/rand"
 	"fmt"
+	"math/rand"
 )
 
-// the static number of bytes in a KademliaID
+//IDLength the static number of bytes in a KademliaID
 const IDLength = 20
 
-// type definition of a KademliaID
+//KademliaID type definition of a KademliaID
 type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
@@ -55,7 +55,7 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	return true
 }
 
-// CalcDistance returns a new instance of a KademliaID that is built 
+// CalcDistance returns a new instance of a KademliaID that is built
 // through a bitwise XOR operation betweeen kademliaID and target
 func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	result := KademliaID{}
