@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"fmt"
 )
 
 func main() {
@@ -19,6 +20,8 @@ func main() {
 		node.PrintIP()
 		//c1 := NewContact(NewRandomKademliaID(),"localhost")
 		//SendPONG(c1)	
+		testPacket := DecodePacket(SendPacket("POST", "123456", "This is a message"))
+		fmt.Println(testPacket.String())
 	}
 
 }

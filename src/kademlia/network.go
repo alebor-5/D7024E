@@ -3,13 +3,47 @@ package main
 import (
 	"net"
 	"strings"
+	"fmt"
+	"log"
 )
 
 type Network struct {
 }
 
-func Listen(ip string, port int) {
+func handleUDPConnection(conn *net.UDPConn) {
+	buffer := make([]byte, 1024)
+	n, addr, err := conn.ReadFromUDP(buffer)
+	fmt.Println("Received from ", addr)
+	fmt.Println("Received the following packet :")
+	recPacket := DecodePacket(buffer[:n])
+	fmt.Println(recPacket.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func Listen(ip string, port string) {
 	// TODO
+	udpAddr, err := net.ResolveUDPAddr("udp4", ip + ":" + port)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ln, err := net.ListenUDP("udp", udpAddr)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Listening on " + ip + ":" + port)
+
+	defer ln.Close()
+
+	for {
+		// wait for UDP client to connect
+		handleUDPConnection(ln)
+	}
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
