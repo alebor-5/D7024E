@@ -8,11 +8,12 @@ import (
 )
 
 type Network struct {
+	kademlia *Kademlia
 }
 
 
-func sendUDP(method string, ip string, payload string){
-	packet := EncodePacket(method,"NODEID",ip,payload)
+func (network *Network) sendUDP(method string, ip string, payload string){
+	packet := EncodePacket(method,network.kademlia.id.String(),ip,payload)
 	RemoteAddr, err := net.ResolveUDPAddr("udp", ip + ":6000")
 	conn, err := net.DialUDP("udp", nil, RemoteAddr)
 	if err != nil {
@@ -32,7 +33,7 @@ func sendUDP(method string, ip string, payload string){
 }
 
 
-func handleUDPConnection(conn *net.UDPConn) {
+func (network *Network) handleUDPConnection(conn *net.UDPConn) {
 	buffer := make([]byte, 1024)
 	n, addr, err := conn.ReadFromUDP(buffer)
 	fmt.Println("Received from ", addr)
@@ -42,12 +43,12 @@ func handleUDPConnection(conn *net.UDPConn) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	network.HandleResponse(recPacket)
 	//TODO Send response
 
 }
 
-func Listen() {
+func (network *Network) Listen() {
 	ip := GetIP()
 	udpAddr, err := net.ResolveUDPAddr("udp4", ip + ":6000")
 	if err != nil {
@@ -65,15 +66,19 @@ func Listen() {
 	defer ln.Close()
 
 	for {
-		handleUDPConnection(ln)
+		network.handleUDPConnection(ln)
 	}
 }
 // OBS THIS SHOULD BE contact *Contact and not temp string
 func (network *Network) SendPingMessage(temp string) {
 	// TODO
-	sendUDP("PING", temp, "PINGEDYOU")
+	network.sendUDP("PING", temp, "")
 }
 
+func (network *Network) SendPongMessage(temp string) {
+	// TODO
+	network.sendUDP("PONG", temp, "")
+}
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
 }

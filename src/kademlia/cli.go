@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-func cli(stdin io.Reader) {
+func (kademliaa *Kademlia) cli(stdin io.Reader) {
+	network := Network{kademliaa}
 	reader := bufio.NewReader(stdin)
 	cmdExp := regexp.MustCompile(`^\s*\S+($|\s)`)
 	spExp := regexp.MustCompile(`^\s*$`)
@@ -25,12 +26,12 @@ func cli(stdin io.Reader) {
 			cmd = strings.TrimSpace(cmd)
 
 			switch strings.ToLower(cmd) {
+			case "ip":
+				fmt.Println("Your IP is: " + GetIP())
+			case "getcontacts":
+				network.kademlia.routingTable.getAllContacts()
 			case "ping":
 				if strExp.MatchString(args) {
-					fmt.Println("Ping isn't implemented :(")
-					fmt.Println("Value: " + args[1:len(args)-1])
-					//TODO: Run Store, if successful print the object hash.
-					network := Network{}
 					go network.SendPingMessage(args[1:len(args)-1])
 				} else {
 					fmt.Println("put takes exactly 1 argument! e.g. [ping \"192.168.1.69\"]")
