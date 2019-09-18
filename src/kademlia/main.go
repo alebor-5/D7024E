@@ -1,8 +1,10 @@
 package main
 
+import "os"
+
 func main() {
 	node := NewKademliaNode()
 	node.PrintIP()
 
-	cli()
+	cli(os.Stdin)
 }
