@@ -13,7 +13,7 @@ type Network struct {
 
 
 func (network *Network) sendUDP(method string, ip string, payload string){
-	packet := EncodePacket(method,network.kademlia.id.String(),ip,payload)
+	packet := EncodePacket(method,network.kademlia.id.String(),network.kademlia.ip,payload)
 	RemoteAddr, err := net.ResolveUDPAddr("udp", ip + ":6000")
 	conn, err := net.DialUDP("udp", nil, RemoteAddr)
 	if err != nil {
