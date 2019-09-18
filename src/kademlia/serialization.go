@@ -31,8 +31,8 @@ func (packet *Packet) String() string {
 	return "Header: \n" + "\tRPC: " + packet.Header.RPC + "\n\tNodeID: " + packet.Header.NodeID + "\n\tIP: " + packet.Header.IP + "\nPayload:\n\tMessage" + packet.Payload.Message
 }
 
-func SendPacket(rpc string, nodeID string, message string) []byte {
-	header := Header{rpc, nodeID, "1.1.1.1"}
+func EncodePacket(rpc string, nodeID string, ip string, message string) []byte {
+	header := Header{rpc, "nodeID", ip}
 	payload := Payload{message}
 	packet := Packet{header,payload}
 	return packetToJSON(packet)

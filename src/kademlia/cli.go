@@ -25,6 +25,16 @@ func cli(stdin io.Reader) {
 			cmd = strings.TrimSpace(cmd)
 
 			switch strings.ToLower(cmd) {
+			case "ping":
+				if strExp.MatchString(args) {
+					fmt.Println("Ping isn't implemented :(")
+					fmt.Println("Value: " + args[1:len(args)-1])
+					//TODO: Run Store, if successful print the object hash.
+					network := Network{}
+					go network.SendPingMessage(args[1:len(args)-1])
+				} else {
+					fmt.Println("put takes exactly 1 argument! e.g. [ping \"192.168.1.69\"]")
+				}
 			case "put":
 				if strExp.MatchString(args) {
 					fmt.Println("Store isn't implemented :(")

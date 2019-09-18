@@ -10,6 +10,28 @@ import (
 type Network struct {
 }
 
+
+func sendUDP(method string, ip string, payload string){
+	packet := EncodePacket(method,"NODEID",ip,payload)
+	RemoteAddr, err := net.ResolveUDPAddr("udp", ip + ":6000")
+	conn, err := net.DialUDP("udp", nil, RemoteAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Sending " + method + " to " + ip)
+
+	defer conn.Close()
+
+	_, err = conn.Write(packet)
+
+	if err != nil {
+		log.Println(err)
+	}
+	
+	// TODO, handle response
+}
+
+
 func handleUDPConnection(conn *net.UDPConn) {
 	buffer := make([]byte, 1024)
 	n, addr, err := conn.ReadFromUDP(buffer)
@@ -21,11 +43,13 @@ func handleUDPConnection(conn *net.UDPConn) {
 		log.Fatal(err)
 	}
 
+	//TODO Send response
+
 }
 
-func Listen(ip string, port string) {
-	// TODO
-	udpAddr, err := net.ResolveUDPAddr("udp4", ip + ":" + port)
+func Listen() {
+	ip := GetIP()
+	udpAddr, err := net.ResolveUDPAddr("udp4", ip + ":6000")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,18 +60,18 @@ func Listen(ip string, port string) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Listening on " + ip + ":" + port)
+	fmt.Println("Listening on " + ip + ":6000")
 
 	defer ln.Close()
 
 	for {
-		// wait for UDP client to connect
 		handleUDPConnection(ln)
 	}
 }
-
-func (network *Network) SendPingMessage(contact *Contact) {
+// OBS THIS SHOULD BE contact *Contact and not temp string
+func (network *Network) SendPingMessage(temp string) {
 	// TODO
+	sendUDP("PING", temp, "PINGEDYOU")
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
@@ -63,7 +87,7 @@ func (network *Network) SendStoreMessage(data []byte) {
 }
 
 func GetIP() string {
-	ip := "0.0.0.0"
+	ip := "localhost"
 	interfaces, _ := net.Interfaces()
 	for _, i := range interfaces {
 		byNameInterface, _ := net.InterfaceByName(i.Name)
