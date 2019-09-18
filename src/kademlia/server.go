@@ -25,7 +25,7 @@ func GetOutboundIP() string {
 
 }
 
-func handleUDPConnection(conn *net.UDPConn) {
+func handleUDPConnection1(conn *net.UDPConn) {
 
 	// here is where you want to do stuff like read or write to client
 
