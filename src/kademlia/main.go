@@ -6,5 +6,5 @@ func main() {
 	node := NewKademliaNode()
 	node.PrintIP()
 
-	cli(os.Stdin)
+	cliLoop(os.Stdin)
 }
