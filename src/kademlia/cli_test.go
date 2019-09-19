@@ -4,7 +4,7 @@ import (
 	"bytes"
 )
 
-func Examplecli() {
+func ExampleCLI() {
 	var stdin bytes.Buffer
 
 	inputs := [7]string{
@@ -22,7 +22,7 @@ func Examplecli() {
 	// >put takes exactly 1 argument! e.g. [put "48656c6c6f2066726f6d20414"]
 	// >LookupData isn't implemented :(
 	// >get takes exactly 1 argument! e.g. [get "111.111.111:0000"]
-	// >This will terminate the node. Continue? [y/n]: Termination aborted
+	// >This will terminate the node. Continue? [Y/n]: Termination aborted
 	// >exit doesn't take any arguments!
 	// >Unknown command: superrandomcommandthatdoesnotexist
 }

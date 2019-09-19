@@ -11,7 +11,7 @@ import (
 
 func cliLoop(stdin io.Reader) {
 	for {
-		cliLoop(stdin)
+		cli(stdin)
 	}
 }
 
@@ -49,7 +49,7 @@ func cli(stdin io.Reader) {
 			}
 		case "exit":
 			if spExp.MatchString(args) {
-				fmt.Print("This will terminate the node. Continue? [y/n]: ")
+				fmt.Print("This will terminate the node. Continue? [Y/n]: ")
 				answer, _ := reader.ReadString('\n')
 				answer = strings.TrimSuffix(answer, "\n")
 				if strings.ToLower(answer) == "y" {
