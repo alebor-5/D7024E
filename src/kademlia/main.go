@@ -8,5 +8,6 @@ func main() {
 	node.PrintIP()
 	network := Network{&node}
 	go network.Listen()
-	node.cli(os.Stdin)
+	network.cliLoop(os.Stdin)
+
 }
