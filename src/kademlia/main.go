@@ -3,8 +3,11 @@ package main
 import "os"
 
 func main() {
-	node := NewKademliaNode()
+	//Todo make choice of either choosing to start or join network
+	node := InitKademliaNode()
 	node.PrintIP()
+	network := Network{&node}
+	go network.Listen()
+	network.cliLoop(os.Stdin)
 
-	cliLoop(os.Stdin)
 }

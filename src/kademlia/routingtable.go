@@ -1,5 +1,8 @@
 package main
 
+import (
+	"fmt"
+)
 const bucketSize = 20
 
 
@@ -67,4 +70,13 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 	}
 
 	return IDLength*8 - 1
+}
+
+func (routingTable *RoutingTable) getAllContacts() {
+	for i := 0; i < IDLength * 8; i++ {
+		for e := routingTable.buckets[i].list.Front(); e != nil; e = e.Next() {
+			nodeID := e.Value.(Contact).ID
+			fmt.Println(nodeID.String())
+		}
+	}
 }

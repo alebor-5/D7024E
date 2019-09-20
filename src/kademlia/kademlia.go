@@ -7,11 +7,14 @@ import (
 type Kademlia struct {
 	id KademliaID
 	ip string
+	routingTable RoutingTable
 }
 
-func NewKademliaNode() Kademlia {
-	id := NewKademliaID("48656c6c6f2066726f6d2041444d466163746f72792e636f6d")
-	return Kademlia{*id, GetIP()}
+func InitKademliaNode() Kademlia {
+	id := NewRandomKademliaID()
+	ip := GetIP()
+	rt := NewRoutingTable(NewContact(id,ip))
+	return  Kademlia{*id, GetIP(), *rt }
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {

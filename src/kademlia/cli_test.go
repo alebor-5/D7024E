@@ -5,6 +5,8 @@ import (
 )
 
 func ExampleCLI() {
+	node := InitKademliaNode()
+	network := Network{&node}
 	var stdin bytes.Buffer
 
 	inputs := [7]string{
@@ -14,7 +16,7 @@ func ExampleCLI() {
 		"superrandomcommandthatdoesnotexist"}
 	for _, str := range inputs {
 		stdin.Write([]byte(str))
-		cli(&stdin)
+		cli(&stdin, network)
 	}
 
 	// Output:

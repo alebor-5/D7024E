@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/rand"
+	"time"
 )
 
 //IDLength the static number of bytes in a KademliaID
@@ -14,10 +14,8 @@ type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
-	fmt.Println(data)
 	decoded, _ := hex.DecodeString(data)
 	newKademliaID := KademliaID{}
-	fmt.Println(len(decoded))
 	for i := 0; i < IDLength; i++ {
 		newKademliaID[i] = decoded[i]
 	}
@@ -28,9 +26,11 @@ func NewKademliaID(data string) *KademliaID {
 // NewRandomKademliaID returns a new instance of a random KademliaID,
 // change this to a better version if you like
 func NewRandomKademliaID() *KademliaID {
+	randomSource := rand.NewSource(time.Now().UnixNano())
+	random := rand.New(randomSource)
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = uint8(rand.Intn(256))
+		newKademliaID[i] = uint8(random.Intn(100))
 	}
 	return &newKademliaID
 }
