@@ -34,12 +34,6 @@ func cli(stdin io.Reader, network Network) {
 				fmt.Println("Your IP is: " + GetIP())
 			case "getcontacts":
 				network.kademlia.routingTable.getAllContacts()
-			case "ping":
-				if strExp.MatchString(args) {
-					go network.SendPingMessage(args[1:len(args)-1])
-				} else {
-					fmt.Println("put takes exactly 1 argument! e.g. [ping \"192.168.1.69\"]")
-				}
 			case "put":
 				if strExp.MatchString(args) {
 					fmt.Println("Store isn't implemented :(")

@@ -29,8 +29,15 @@ func (network *Network) sendUDP(method string, ip string, payload string){
 		log.Println(err)
 	}
 	
-	// TODO, handle response
+
+	// This is to handle the response from 
+	buffer := make([]byte, 1024)
+	response, RemoteAddr, err := conn.ReadFromUDP(buffer)
+
+	resPacket := DecodePacket(buffer[:response])
+	network.HandleResponse(resPacket)
 }
+
 
 
 func (network *Network) handleUDPConnection(conn *net.UDPConn) {
@@ -43,9 +50,15 @@ func (network *Network) handleUDPConnection(conn *net.UDPConn) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	network.HandleResponse(recPacket)
+	network.HandleRequest(recPacket, conn, addr)
 	//TODO Send response
 
+}
+
+func (network *Network) SendResponse(method string, payload string, conn *net.UDPConn, addr *net.UDPAddr){
+	packet := EncodePacket(method,network.kademlia.id.String(),network.kademlia.ip,payload)
+	_, _ = conn.WriteToUDP(packet, addr )
+	
 }
 
 func (network *Network) Listen() {
@@ -69,16 +82,11 @@ func (network *Network) Listen() {
 		network.handleUDPConnection(ln)
 	}
 }
-// OBS THIS SHOULD BE contact *Contact and not temp string
-func (network *Network) SendPingMessage(temp string) {
+func (network *Network) SendPingMessage(contact Contact) {
 	// TODO
-	network.sendUDP("PING", temp, "")
+	go network.sendUDP("PING", contact.Address, "")
 }
 
-func (network *Network) SendPongMessage(temp string) {
-	// TODO
-	network.sendUDP("PONG", temp, "")
-}
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
 }

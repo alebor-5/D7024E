@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 const bucketSize = 20
 
@@ -74,6 +75,7 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 
 func (routingTable *RoutingTable) getAllContacts() {
 	for i := 0; i < IDLength * 8; i++ {
+		fmt.Println("Bucket nr: " + strconv.Itoa(i))
 		for e := routingTable.buckets[i].list.Front(); e != nil; e = e.Next() {
 			nodeID := e.Value.(Contact).ID
 			fmt.Println(nodeID.String())
