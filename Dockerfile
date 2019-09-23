@@ -1,3 +1,3 @@
 FROM ubuntu:latest
 
-CMD /app/kademlia
+CMD /init/init.sh
