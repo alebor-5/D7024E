@@ -82,10 +82,9 @@ func (network *Network) Listen() {
 		network.handleUDPConnection(ln)
 	}
 }
-// OBS THIS SHOULD BE contact *Contact and not temp string
-func (network *Network) SendPingMessage(temp string) {
+func (network *Network) SendPingMessage(contact Contact) {
 	// TODO
-	go network.sendUDP("PING", temp, "")
+	go network.sendUDP("PING", contact.Address, "")
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
