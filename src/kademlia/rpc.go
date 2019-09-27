@@ -8,7 +8,7 @@ type RPC struct {
 }
 
 func (network *Network) HandleRequest(packet Packet) []byte {
-	contact := NewContact(NewKademliaID(packet.NodeID.String()), packet.IP)
+	contact := NewContact(&packet.NodeID, packet.IP)
 	switch packet.RPC {
 	case "PING":
 		network.kademlia.routingTable.mux.Lock()
@@ -22,7 +22,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 }
 
 func (network *Network) HandleResponse(packet Packet) Packet {
-	contact := NewContact(NewKademliaID(packet.NodeID.String()), packet.IP)
+	contact := NewContact(&packet.NodeID, packet.IP)
 	switch packet.RPC {
 	case "PONG":
 		fmt.Println("Got a PONG")

@@ -13,9 +13,9 @@ type Kademlia struct {
 func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	node := InitKademliaNode()
 	network := Network{&node}
-	node.routingTable.mux.Lock()
-	node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
-	node.routingTable.mux.Unlock()
+	//node.routingTable.mux.Lock()
+	//node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
+	//node.routingTable.mux.Unlock()
 	go network.Listen()
 	//TODO: Run iterative FIND_NODE on self
 	network.SendPingMessage(NewContact(bootstrapID, bootstrapIP))

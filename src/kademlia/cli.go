@@ -34,6 +34,8 @@ func cli(stdin io.Reader, network Network) {
 			fmt.Println("Your IP is: " + GetIP())
 		case "getcontacts":
 			network.kademlia.routingTable.getAllContacts()
+		case "getnodeid":
+			fmt.Println("Your nodeID is: " + network.kademlia.id.String())
 		case "ping":
 			network.SendPingMessage(NewContact(NewRandomKademliaID(), args[1:len(args)-1]))
 		case "put":

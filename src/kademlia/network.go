@@ -16,13 +16,13 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact) Pa
 	fmt.Println(ip)
 	RemoteAddr, _ := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, _ := net.DialUDP("udp", nil, RemoteAddr)
-	err := conn.SetDeadline(time.Now().Add(time.Second))
+	conn.SetDeadline(time.Now().Add(time.Second))
 	defer conn.Close()
-	_, _ = conn.Write(byteArr)
+	conn.Write(byteArr)
 
 	// This is to handle the response from
 	buffer := make([]byte, 1024)
-	response, RemoteAddr, _ := conn.ReadFromUDP(buffer)
+	response, RemoteAddr, err := conn.ReadFromUDP(buffer)
 
 	resPacket := DecodePacket(buffer[:response])
 	if err != nil {
