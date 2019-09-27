@@ -25,6 +25,7 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 	contact := NewContact(NewKademliaID(packet.NodeID.String()), packet.IP)
 	switch packet.RPC {
 	case "PONG":
+		fmt.Println("Got a PONG")
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strings"
+	"time"
 )
 
 type Network struct {
@@ -11,8 +13,10 @@ type Network struct {
 
 func (network *Network) sendUDP(method string, ip string, contacts []Contact) Packet {
 	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, contacts)
+	fmt.Println(ip)
 	RemoteAddr, _ := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, _ := net.DialUDP("udp", nil, RemoteAddr)
+	err := conn.SetDeadline(time.Now().Add(time.Second))
 	defer conn.Close()
 	_, _ = conn.Write(byteArr)
 
@@ -21,6 +25,9 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact) Pa
 	response, RemoteAddr, _ := conn.ReadFromUDP(buffer)
 
 	resPacket := DecodePacket(buffer[:response])
+	if err != nil {
+		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}}
+	}
 	return network.HandleResponse(resPacket)
 }
 
@@ -51,6 +58,7 @@ func (network *Network) Listen() {
 }
 
 func (network *Network) SendPingMessage(contact Contact) {
+	fmt.Println("hej")
 	go network.sendUDP("PING", contact.Address, []Contact{})
 }
 
