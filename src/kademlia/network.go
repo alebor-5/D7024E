@@ -11,13 +11,13 @@ type Network struct {
 	kademlia *Kademlia
 }
 
-func (network *Network) sendUDP(method string, ip string, contacts []Contact) Packet {
-	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, contacts)
-	fmt.Println(ip)
+func (network *Network) sendUDP(method string, ip string, contacts []Contact, message string) Packet {
+	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, contacts, message)
 	RemoteAddr, _ := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, _ := net.DialUDP("udp", nil, RemoteAddr)
-	conn.SetDeadline(time.Now().Add(time.Second))
+	conn.SetDeadline(time.Now().Add(time.Second * 5))
 	defer conn.Close()
+	fmt.Println("Sending " + method)
 	conn.Write(byteArr)
 
 	// This is to handle the response from
@@ -26,9 +26,11 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact) Pa
 
 	resPacket := DecodePacket(buffer[:response])
 	if err != nil {
-		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}}
+		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}, ""}
 	}
-	return network.HandleResponse(resPacket)
+	res := network.HandleResponse(resPacket)
+	fmt.Println("Got a " + res.RPC + " response")
+	return res
 }
 
 func (network *Network) handleUDPConnection(conn *net.UDPConn) {
@@ -59,7 +61,7 @@ func (network *Network) Listen() {
 
 func (network *Network) SendPingMessage(contact Contact) {
 	fmt.Println("hej")
-	go network.sendUDP("PING", contact.Address, []Contact{})
+	go network.sendUDP("PING", contact.Address, []Contact{}, "")
 }
 
 func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int, target *Contact) {
@@ -67,22 +69,22 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	var shortItemPtr *ShortlistItem
 
 	(*shortlist).mux.Lock()
-	for _, item := range shortlist.ls {
+	for i, item := range (*shortlist).ls {
 		if !item.sent {
-			item.sent = true
-			shortItemPtr = &item
+			(*shortlist).ls[i].sent = true
+			shortItemPtr = &(*shortlist).ls[i]
 			contact = item.contact
+			break
 		}
 	}
 	(*shortlist).mux.Unlock()
-
-	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{*target})
+	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*target).ID.String())
 	(*shortlist).mux.Lock()
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
-		shortlist.remove(contact)
+		(*shortlist).remove(contact)
 	} else {
 		(*shortItemPtr).visited = true
-		for _, con := range response.contacts {
+		for _, con := range response.Contacts {
 			(*shortlist).insert(target, con)
 		}
 	}

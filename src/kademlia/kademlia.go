@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 )
 
@@ -59,6 +60,14 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	}
 
 	for !lookupDone(&shortlist) {
+		<-c
+		shortlist.mux.Lock()
+		fmt.Println("Här tog vi emot en ny channel")
+		for _, elem := range shortlist.ls {
+			fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+		}
+		shortlist.mux.Unlock()
+		fmt.Println("Skickar ut en ny FIND_NODE")
 		go net.SendFindContactMessage(&shortlist, c, target)
 	}
 
@@ -74,6 +83,11 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 		result = append(result, shortlist.ls[i].contact)
 	}
 	shortlist.mux.Unlock()
+
+	fmt.Println("\n\n\n" + "Här är resultatet:")
+	for _, elem := range result {
+		fmt.Println(elem.String() + ", Distance: " + elem.ID.CalcDistance(target.ID).String())
+	}
 	return result
 }
 

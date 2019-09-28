@@ -2,25 +2,31 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 func (network *Network) HandleRequest(packet Packet) []byte {
+	idstring := packet.Message
+	fmt.Println(idstring)
 	contact := NewContact(&packet.NodeID, packet.IP)
+	le := len(packet.Contacts)
+	fmt.Println(packet.RPC + " : " + strconv.Itoa(le))
 	switch packet.RPC {
 	case "PING":
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
-		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{})
+		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
 	case "FIND_NODE":
-		target := packet.contacts[0].ID
+
+		target := NewKademliaID(idstring)
 		network.kademlia.routingTable.mux.Lock()
 		contacts := network.kademlia.routingTable.FindClosestContacts(target, K)
 		network.kademlia.routingTable.mux.Unlock()
-		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, contacts)
+		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, contacts, "")
 	default:
 		fmt.Println("UNKNOWN REQUEST RPC: " + packet.RPC + ", sending a default Message")
-		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, []Contact{})
+		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
 	}
 }
 

@@ -38,6 +38,13 @@ func cli(stdin io.Reader, network Network) {
 			fmt.Println("Your nodeID is: " + network.kademlia.id.String())
 		case "ping":
 			network.SendPingMessage(NewContact(NewRandomKademliaID(), args[1:len(args)-1]))
+		case "find0":
+			id := NewKademliaID("1111111100000000000000000000000000000000")
+			cont := NewContact(id, "10.0.0.5")
+			closest := network.kademlia.LookupContact(&cont)
+			for _, elem := range closest {
+				fmt.Println(elem.String())
+			}
 		case "put":
 			if strExp.MatchString(args) {
 				fmt.Println("Store isn't implemented :(")
