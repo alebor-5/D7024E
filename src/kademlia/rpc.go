@@ -4,9 +4,6 @@ import (
 	"fmt"
 )
 
-type RPC struct {
-}
-
 func (network *Network) HandleRequest(packet Packet) []byte {
 	contact := NewContact(&packet.NodeID, packet.IP)
 	switch packet.RPC {

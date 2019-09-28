@@ -62,8 +62,32 @@ func (network *Network) SendPingMessage(contact Contact) {
 	go network.sendUDP("PING", contact.Address, []Contact{})
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact) {
-	// TODO
+func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int, target *Contact) {
+	var contact Contact
+	var shortItemPtr *ShortlistItem
+
+	(*shortlist).mux.Lock()
+	for _, item := range shortlist.ls {
+		if !item.sent {
+			item.sent = true
+			shortItemPtr = &item
+			contact = item.contact
+		}
+	}
+	(*shortlist).mux.Unlock()
+
+	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{*target})
+	(*shortlist).mux.Lock()
+	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
+		shortlist.remove(contact)
+	} else {
+		(*shortItemPtr).visited = true
+		for _, con := range response.contacts {
+			(*shortlist).insert(target, con)
+		}
+	}
+	(*shortlist).mux.Unlock()
+	c <- 0
 }
 
 func (network *Network) SendFindDataMessage(hash string) {

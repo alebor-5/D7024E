@@ -15,6 +15,7 @@ type Kademlia struct {
 
 type ShortlistItem struct {
 	contact Contact
+	sent    bool
 	visited bool
 }
 
@@ -44,8 +45,10 @@ func InitKademliaNode() Kademlia {
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) (Contact, []Contact) {
+	net := Network{kademlia}
 	shortlist := Shortlist{}
 	initContacts := kademlia.routingTable.FindClosestContacts((*target).ID, alpha)
+	//c := make(chan int)
 
 	for _, contact := range initContacts {
 		shortlist.mux.Lock()
@@ -53,6 +56,11 @@ func (kademlia *Kademlia) LookupContact(target *Contact) (Contact, []Contact) {
 		shortlist.mux.Unlock()
 	}
 
+	shortlist.mux.Lock()
+	for _, item := range shortlist.ls {
+
+	}
+	shortlist.mux.Unlock()
 	return Contact{}, []Contact{}
 }
 
@@ -64,13 +72,13 @@ func (shortlist *Shortlist) insert(target *Contact, contact Contact) {
 		if shortItem.contact.ID.Equals(contact.ID) {
 			return
 		} else if (*conDist).Less(itemDist) {
-			fst := append((*shortlist).ls[:i], ShortlistItem{contact, false})
+			fst := append((*shortlist).ls[:i], ShortlistItem{contact, false, false})
 			lst := (*shortlist).ls[i:]
 			(*shortlist).ls = append(fst, lst...)
 			return
 		}
 	}
-	(*shortlist).ls = append((*shortlist).ls, ShortlistItem{contact, false})
+	(*shortlist).ls = append((*shortlist).ls, ShortlistItem{contact, false, false})
 }
 
 func (shortlist *Shortlist) remove(contact Contact) {
@@ -78,7 +86,7 @@ func (shortlist *Shortlist) remove(contact Contact) {
 		if shortItem.contact.ID.Equals(contact.ID) {
 			fst := (*shortlist).ls[:i]
 			if i == len((*shortlist).ls)-1 {
-				(*shortlist).ls = append(fst, (*shortlist).ls[:i+1]...)
+				(*shortlist).ls = append(fst, (*shortlist).ls[i+1:]...)
 			} else {
 				(*shortlist).ls = fst
 			}
