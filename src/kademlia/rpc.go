@@ -12,6 +12,12 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
 		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{})
+	case "FIND_NODE":
+		target := packet.contacts[0].ID
+		network.kademlia.routingTable.mux.Lock()
+		contacts := network.kademlia.routingTable.FindClosestContacts(target, 20)
+		network.kademlia.routingTable.mux.Unlock()
+		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, contacts)
 	default:
 		fmt.Println("UNKNOWN REQUEST RPC: " + packet.RPC + ", sending a default Message")
 		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, []Contact{})
@@ -23,6 +29,10 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 	switch packet.RPC {
 	case "PONG":
 		fmt.Println("Got a PONG")
+		network.kademlia.routingTable.mux.Lock()
+		network.kademlia.routingTable.AddContact(contact)
+		network.kademlia.routingTable.mux.Unlock()
+	case "FIND_NODE_RESULT":
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
