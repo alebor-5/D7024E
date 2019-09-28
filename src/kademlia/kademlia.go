@@ -6,6 +6,7 @@ import (
 )
 
 const alpha = 3
+const K = 10
 
 type Kademlia struct {
 	id           KademliaID
@@ -44,24 +45,50 @@ func InitKademliaNode() Kademlia {
 	return Kademlia{*id, GetIP(), *rt}
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) (Contact, []Contact) {
+func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	net := Network{kademlia}
 	shortlist := Shortlist{}
 	initContacts := kademlia.routingTable.FindClosestContacts((*target).ID, alpha)
-	//c := make(chan int)
+	c := make(chan int)
 
 	for _, contact := range initContacts {
 		shortlist.mux.Lock()
 		shortlist.insert(target, contact)
+		go net.SendFindContactMessage(&shortlist, c, target)
 		shortlist.mux.Unlock()
 	}
 
-	shortlist.mux.Lock()
-	for _, item := range shortlist.ls {
+	for !lookupDone(&shortlist) {
+		go net.SendFindContactMessage(&shortlist, c, target)
+	}
 
+	shortlist.mux.Lock()
+	var length int
+	if len(shortlist.ls) < K {
+		length = len(shortlist.ls)
+	} else {
+		length = K
+	}
+	result := []Contact{}
+	for i := 0; i < length; i++ {
+		result = append(result, shortlist.ls[i].contact)
 	}
 	shortlist.mux.Unlock()
-	return Contact{}, []Contact{}
+	return result
+}
+
+func lookupDone(shortlist *Shortlist) bool {
+	shortlist.mux.Lock()
+	for i, item := range (*shortlist).ls {
+		if i >= K {
+			break
+		} else if !item.sent || !item.visited {
+			shortlist.mux.Unlock()
+			return false
+		}
+	}
+	shortlist.mux.Unlock()
+	return true
 }
 
 // Inserts item sorted by distance to target

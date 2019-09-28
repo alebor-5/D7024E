@@ -15,7 +15,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 	case "FIND_NODE":
 		target := packet.contacts[0].ID
 		network.kademlia.routingTable.mux.Lock()
-		contacts := network.kademlia.routingTable.FindClosestContacts(target, 20)
+		contacts := network.kademlia.routingTable.FindClosestContacts(target, K)
 		network.kademlia.routingTable.mux.Unlock()
 		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, contacts)
 	default:
