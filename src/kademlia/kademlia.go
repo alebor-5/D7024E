@@ -55,19 +55,29 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	for _, contact := range initContacts {
 		shortlist.mux.Lock()
 		shortlist.insert(target, contact)
+		for _, elem := range shortlist.ls {
+			fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+		}
 		go net.SendFindContactMessage(&shortlist, c, target)
 		shortlist.mux.Unlock()
 	}
 
+	// shortlist.mux.Lock()
+	// fmt.Println("Init shortlist")
+	// for _, elem := range shortlist.ls {
+	// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+	// }
+	// shortlist.mux.Unlock()
+
 	for !lookupDone(&shortlist) {
 		<-c
-		shortlist.mux.Lock()
-		fmt.Println("Här tog vi emot en ny channel")
-		for _, elem := range shortlist.ls {
-			fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
-		}
-		shortlist.mux.Unlock()
-		fmt.Println("Skickar ut en ny FIND_NODE")
+		// shortlist.mux.Lock()
+		// fmt.Println("Här tog vi emot en ny channel")
+		// for _, elem := range shortlist.ls {
+		// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+		// }
+		// shortlist.mux.Unlock()
+		// fmt.Println("Skickar ut en ny FIND_NODE")
 		go net.SendFindContactMessage(&shortlist, c, target)
 	}
 
@@ -111,14 +121,29 @@ func (shortlist *Shortlist) insert(target *Contact, contact Contact) {
 	for i, shortItem := range (*shortlist).ls {
 		itemDist := shortItem.contact.ID.CalcDistance((*target).ID)
 		if shortItem.contact.ID.Equals(contact.ID) {
+			fmt.Println("EQUAL")
 			return
 		} else if (*conDist).Less(itemDist) {
-			fst := append((*shortlist).ls[:i], ShortlistItem{contact, false, false})
+			fmt.Println("Less than")
+			fst := (*shortlist).ls[:i]
+			fmt.Println("FST:")
+			for _, elem := range fst {
+				fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+			}
+
 			lst := (*shortlist).ls[i:]
-			(*shortlist).ls = append(fst, lst...)
+			fmt.Println("LST:")
+			for _, elem := range lst {
+				fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+			}
+			(*shortlist).ls = append(append(fst, ShortlistItem{contact, false, false}), lst...)
+			// for _, elem := range (*shortlist).ls {
+			// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+			// }
 			return
 		}
 	}
+	fmt.Println("Last Place")
 	(*shortlist).ls = append((*shortlist).ls, ShortlistItem{contact, false, false})
 }
 

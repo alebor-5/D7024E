@@ -70,20 +70,29 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 
 	(*shortlist).mux.Lock()
 	for i, item := range (*shortlist).ls {
-		if !item.sent {
+		if i >= K {
+			return
+		} else if !item.sent {
 			(*shortlist).ls[i].sent = true
 			shortItemPtr = &(*shortlist).ls[i]
 			contact = item.contact
 			break
+		} else if i == len((*shortlist).ls)-1 && item.sent {
+			c <- 0
+			return
 		}
 	}
 	(*shortlist).mux.Unlock()
 	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*target).ID.String())
 	(*shortlist).mux.Lock()
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
+		fmt.Println("NU TOG VI BORT EN JÄVEL!!!")
 		(*shortlist).remove(contact)
 	} else {
 		(*shortItemPtr).visited = true
+		// for _, elem := range (*shortlist).ls {
+		// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+		// }
 		for _, con := range response.Contacts {
 			(*shortlist).insert(target, con)
 		}
