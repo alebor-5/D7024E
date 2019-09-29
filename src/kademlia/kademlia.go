@@ -121,29 +121,29 @@ func (shortlist *Shortlist) insert(target *Contact, contact Contact) {
 	for i, shortItem := range (*shortlist).ls {
 		itemDist := shortItem.contact.ID.CalcDistance((*target).ID)
 		if shortItem.contact.ID.Equals(contact.ID) {
-			fmt.Println("EQUAL")
+			//fmt.Println("EQUAL")
 			return
 		} else if (*conDist).Less(itemDist) {
-			fmt.Println("Less than")
+			//fmt.Println("Less than")
 			fst := (*shortlist).ls[:i]
-			fmt.Println("FST:")
-			for _, elem := range fst {
-				fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
-			}
+			// fmt.Println("FST:")
+			// for _, elem := range fst {
+			// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+			// }
 
 			lst := (*shortlist).ls[i:]
-			fmt.Println("LST:")
-			for _, elem := range lst {
-				fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
-			}
-			(*shortlist).ls = append(append(fst, ShortlistItem{contact, false, false}), lst...)
+			// fmt.Println("LST:")
+			// for _, elem := range lst {
+			// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
+			// }
+			(*shortlist).ls = append(fst, append([]ShortlistItem{ShortlistItem{contact, false, false}}, lst...)...)
 			// for _, elem := range (*shortlist).ls {
 			// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
 			// }
 			return
 		}
 	}
-	fmt.Println("Last Place")
+	//fmt.Println("Last Place")
 	(*shortlist).ls = append((*shortlist).ls, ShortlistItem{contact, false, false})
 }
 

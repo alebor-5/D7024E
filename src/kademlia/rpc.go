@@ -7,7 +7,7 @@ import (
 
 func (network *Network) HandleRequest(packet Packet) []byte {
 	idstring := packet.Message
-	fmt.Println(idstring)
+	//fmt.Println(idstring)
 	contact := NewContact(&packet.NodeID, packet.IP)
 	le := len(packet.Contacts)
 	fmt.Println(packet.RPC + " : " + strconv.Itoa(le))
@@ -18,7 +18,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		network.kademlia.routingTable.mux.Unlock()
 		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
 	case "FIND_NODE":
-
+		fmt.Println(idstring)
 		target := NewKademliaID(idstring)
 		network.kademlia.routingTable.mux.Lock()
 		contacts := network.kademlia.routingTable.FindClosestContacts(target, K)
