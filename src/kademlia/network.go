@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -12,18 +13,24 @@ type Network struct {
 }
 
 func (network *Network) sendUDP(method string, ip string, contacts []Contact, message string) Packet {
+	msgSize := int(math.Pow(2, math.Ceil(math.Log2(200+K*100))))
 	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, contacts, message)
-	RemoteAddr, _ := net.ResolveUDPAddr("udp", ip+":6000")
-	conn, _ := net.DialUDP("udp", nil, RemoteAddr)
+	RemoteAddr, resAddErr := net.ResolveUDPAddr("udp", ip+":6000")
+	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
 	conn.SetDeadline(time.Now().Add(time.Second * 5))
 	defer conn.Close()
 	fmt.Println("Sending " + method)
 	conn.Write(byteArr)
+	if resAddErr != nil {
+		fmt.Println("Det blev en resAddErr: " + resAddErr.Error())
+	}
+	if dialErr != nil {
+		fmt.Println("Det blev en dialErr: " + dialErr.Error())
+	}
 
 	// This is to handle the response from
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, msgSize)
 	response, RemoteAddr, err := conn.ReadFromUDP(buffer)
-
 	resPacket := DecodePacket(buffer[:response])
 	if err != nil {
 		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}, ""}
@@ -71,6 +78,7 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	(*shortlist).mux.Lock()
 	for i, item := range (*shortlist).ls {
 		if i >= K {
+			(*shortlist).mux.Unlock()
 			return
 		} else if !item.sent {
 			(*shortlist).ls[i].sent = true
@@ -78,7 +86,9 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 			contact = item.contact
 			break
 		} else if i == len((*shortlist).ls)-1 && item.sent {
+			fmt.Println("Ingen att skicka till")
 			c <- 0
+			(*shortlist).mux.Unlock()
 			return
 		}
 	}
@@ -87,19 +97,15 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	(*shortlist).mux.Lock()
 	fmt.Println(response.RPC)
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
-		fmt.Println("NU TOG VI BORT EN JÄVEL!!!")
 		(*shortlist).remove(contact)
 	} else {
 		(*shortItemPtr).visited = true
-
 		for _, con := range response.Contacts {
 			(*shortlist).insert(target, con)
 		}
-		// for _, elem := range (*shortlist).ls {
-		// 	fmt.Println(elem.contact.String() + ", Visited:" + strconv.FormatBool(elem.visited) + ", sent:" + strconv.FormatBool(elem.sent))
-		// }
 	}
 	(*shortlist).mux.Unlock()
+	fmt.Println("Gav response")
 	c <- 0
 }
 
