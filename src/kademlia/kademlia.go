@@ -45,25 +45,25 @@ func InitKademliaNode() Kademlia {
 	return Kademlia{*id, GetIP(), *rt}
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
+func (kademlia *Kademlia) LookupContact(targetID *KademliaID) []Contact {
 	net := Network{kademlia}
 	shortlist := Shortlist{}
-	initContacts := kademlia.routingTable.FindClosestContacts((*target).ID, alpha)
+	initContacts := kademlia.routingTable.FindClosestContacts(targetID, alpha)
 	c := make(chan int, alpha)
 
 	for _, contact := range initContacts {
 		shortlist.mux.Lock()
-		shortlist.insert(target, contact)
+		shortlist.insert(targetID, contact)
 		shortlist.mux.Unlock()
 	}
 
 	for i := 0; i < alpha; i++ {
-		go net.SendFindContactMessage(&shortlist, c, target)
+		go net.SendFindContactMessage(&shortlist, c, targetID)
 	}
 
 	for !lookupDone(&shortlist) {
 		<-c
-		go net.SendFindContactMessage(&shortlist, c, target)
+		go net.SendFindContactMessage(&shortlist, c, targetID)
 	}
 
 	shortlist.mux.Lock()
@@ -81,7 +81,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 
 	fmt.Println("\n\n\n" + "Här är resultatet:")
 	for _, elem := range result {
-		fmt.Println(elem.String() + ", Distance: " + elem.ID.CalcDistance(target.ID).String())
+		fmt.Println(elem.String() + ", Distance: " + elem.ID.CalcDistance(targetID).String())
 	}
 	return result
 }
@@ -101,10 +101,10 @@ func lookupDone(shortlist *Shortlist) bool {
 }
 
 // Inserts item sorted by distance to target
-func (shortlist *Shortlist) insert(target *Contact, contact Contact) {
-	conDist := contact.ID.CalcDistance((*target).ID)
+func (shortlist *Shortlist) insert(target *KademliaID, contact Contact) {
+	conDist := contact.ID.CalcDistance(target)
 	for i, shortItem := range (*shortlist).ls {
-		itemDist := shortItem.contact.ID.CalcDistance((*target).ID)
+		itemDist := shortItem.contact.ID.CalcDistance(target)
 		if shortItem.contact.ID.Equals(contact.ID) {
 			return
 		} else if (*conDist).Less(itemDist) {
@@ -118,9 +118,9 @@ func (shortlist *Shortlist) insert(target *Contact, contact Contact) {
 	(*shortlist).ls = append((*shortlist).ls, ShortlistItem{contact, false, false})
 }
 
-func (shortlist *Shortlist) remove(contact Contact) {
+func (shortlist *Shortlist) remove(id *KademliaID) {
 	for i, shortItem := range (*shortlist).ls {
-		if shortItem.contact.ID.Equals(contact.ID) {
+		if shortItem.contact.ID.Equals(id) {
 			fst := (*shortlist).ls[:i]
 			if i == len((*shortlist).ls)-1 {
 				(*shortlist).ls = append(fst, (*shortlist).ls[i+1:]...)

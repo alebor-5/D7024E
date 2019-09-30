@@ -40,8 +40,7 @@ func cli(stdin io.Reader, network Network) {
 			network.SendPingMessage(NewContact(NewRandomKademliaID(), args[1:len(args)-1]))
 		case "find0":
 			id := NewKademliaID("1111111100000000000000000000000000000000")
-			cont := NewContact(id, "10.0.0.5")
-			closest := network.kademlia.LookupContact(&cont)
+			closest := network.kademlia.LookupContact(id)
 			for _, elem := range closest {
 				fmt.Println(elem.String())
 			}

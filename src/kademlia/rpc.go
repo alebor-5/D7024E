@@ -21,9 +21,25 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		fmt.Println(idstring)
 		target := NewKademliaID(idstring)
 		network.kademlia.routingTable.mux.Lock()
-		contacts := network.kademlia.routingTable.FindClosestContacts(target, K)
+		returnContacts := network.kademlia.routingTable.FindClosestContacts(target, K+1)
 		network.kademlia.routingTable.mux.Unlock()
-		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, contacts, "")
+
+		for i, elem := range returnContacts {
+			if contact.ID.Equals(elem.ID) {
+				fst := returnContacts[:i]
+				if i != len(returnContacts)-1 {
+					returnContacts = append(fst, returnContacts[i+1:]...)
+				} else {
+					returnContacts = fst
+				}
+				break
+			}
+		}
+		if len(returnContacts) > K {
+			returnContacts = returnContacts[:K]
+		}
+
+		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, returnContacts, "")
 	default:
 		fmt.Println("UNKNOWN REQUEST RPC: " + packet.RPC + ", sending a default Message")
 		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, []Contact{}, "")

@@ -71,7 +71,7 @@ func (network *Network) SendPingMessage(contact Contact) {
 	go network.sendUDP("PING", contact.Address, []Contact{}, "")
 }
 
-func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int, target *Contact) {
+func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int, targetID *KademliaID) {
 	var contact Contact
 	var shortItemPtr *ShortlistItem
 
@@ -93,15 +93,15 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 		}
 	}
 	(*shortlist).mux.Unlock()
-	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*target).ID.String())
+	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*targetID).String())
 	(*shortlist).mux.Lock()
 	fmt.Println(response.RPC)
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
-		(*shortlist).remove(contact)
+		(*shortlist).remove(contact.ID)
 	} else {
 		(*shortItemPtr).visited = true
 		for _, con := range response.Contacts {
-			(*shortlist).insert(target, con)
+			(*shortlist).insert(targetID, con)
 		}
 	}
 	(*shortlist).mux.Unlock()
