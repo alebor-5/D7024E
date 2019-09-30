@@ -1,4 +1,4 @@
-nodes=${1:-50} # number of total nodes (including the bootstrap node) that should be deployed
+nodes=${1:-10} # number of total nodes (including the bootstrap node) that should be deployed
 echo "Removing any old services:"
 docker-compose rm -sf bootstrap-node kademlia-node # -s, stops any running kademlia nodes. -f force removal of the containers.
 echo "Building app:"

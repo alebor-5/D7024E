@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"sync"
 )
-const bucketSize = 20
 
+const bucketSize = 20
 
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets
 type RoutingTable struct {
 	me      Contact
 	buckets [IDLength * 8]*bucket
+	mux     sync.Mutex
 }
 
 // NewRoutingTable returns a new instance of a RoutingTable
@@ -74,7 +76,7 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 }
 
 func (routingTable *RoutingTable) getAllContacts() {
-	for i := 0; i < IDLength * 8; i++ {
+	for i := 0; i < IDLength*8; i++ {
 		fmt.Println("Bucket nr: " + strconv.Itoa(i))
 		for e := routingTable.buckets[i].list.Front(); e != nil; e = e.Next() {
 			nodeID := e.Value.(Contact).ID
