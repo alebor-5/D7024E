@@ -79,10 +79,6 @@ func (kademlia *Kademlia) LookupContact(targetID *KademliaID) []Contact {
 	}
 	shortlist.mux.Unlock()
 
-	fmt.Println("\n\n\n" + "Här är resultatet:")
-	for _, elem := range result {
-		fmt.Println(elem.String() + ", Distance: " + elem.ID.CalcDistance(targetID).String())
-	}
 	return result
 }
 

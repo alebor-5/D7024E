@@ -86,7 +86,6 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 			contact = item.contact
 			break
 		} else if i == len((*shortlist).ls)-1 && item.sent {
-			fmt.Println("Ingen att skicka till")
 			c <- 0
 			(*shortlist).mux.Unlock()
 			return
@@ -95,7 +94,6 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	(*shortlist).mux.Unlock()
 	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*targetID).String())
 	(*shortlist).mux.Lock()
-	fmt.Println(response.RPC)
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
 		(*shortlist).remove(contact.ID)
 	} else {
@@ -105,7 +103,6 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 		}
 	}
 	(*shortlist).mux.Unlock()
-	fmt.Println("Gav response")
 	c <- 0
 }
 
