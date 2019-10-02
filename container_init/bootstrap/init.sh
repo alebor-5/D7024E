@@ -1,1 +1,1 @@
-/app/kademlia -bootstrap
+/app/kademlia -bootstrap=true
