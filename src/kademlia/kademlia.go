@@ -103,6 +103,51 @@ func lookupDone(shortlist *Shortlist) bool {
 	return true
 }
 
+func (kademlia *Kademlia) LookupData(hash string) interface{} {
+	targetID := NewKademliaID(hash)
+	net := Network{kademlia}
+	shortlist := Shortlist{}
+	initContacts := kademlia.routingTable.FindClosestContacts(targetID, alpha)
+	c := make(chan int, alpha)
+
+	for _, contact := range initContacts {
+		shortlist.mux.Lock()
+		shortlist.insert(targetID, contact)
+		shortlist.mux.Unlock()
+	}
+
+	for i := 0; i < alpha; i++ {
+		go net.SendFindContactMessage(&shortlist, c, targetID)
+	}
+
+	for !lookupDone(&shortlist) {
+		<-c
+		go net.SendFindContactMessage(&shortlist, c, targetID)
+	}
+
+	shortlist.mux.Lock()
+	var length int
+	if len(shortlist.ls) < K {
+		length = len(shortlist.ls)
+	} else {
+		length = K
+	}
+	result := []Contact{}
+	for i := 0; i < length; i++ {
+		result = append(result, shortlist.ls[i].contact)
+	}
+	shortlist.mux.Unlock()
+
+	return result
+}
+
+func (kademlia *Kademlia) Store(data []byte) {
+	// TODO
+}
+func (kademlia *Kademlia) PrintIP() {
+	fmt.Println(kademlia.ip)
+}
+
 // Inserts item sorted by distance to target
 func (shortlist *Shortlist) insert(target *KademliaID, contact Contact) {
 	conDist := contact.ID.CalcDistance(target)
@@ -133,15 +178,4 @@ func (shortlist *Shortlist) remove(id *KademliaID) {
 			return
 		}
 	}
-}
-
-func (kademlia *Kademlia) LookupData(hash string) {
-	// TODO
-}
-
-func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
-}
-func (kademlia *Kademlia) PrintIP() {
-	fmt.Println(kademlia.ip)
 }
