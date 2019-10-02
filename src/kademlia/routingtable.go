@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const bucketSize = 20
+const bucketSize = K
 
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets

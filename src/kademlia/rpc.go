@@ -22,6 +22,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		target := NewKademliaID(idstring)
 		network.kademlia.routingTable.mux.Lock()
 		returnContacts := network.kademlia.routingTable.FindClosestContacts(target, K+1)
+		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
 
 		for i, elem := range returnContacts {

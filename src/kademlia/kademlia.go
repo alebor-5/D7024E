@@ -28,13 +28,20 @@ type Shortlist struct {
 func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	node := InitKademliaNode()
 	network := Network{&node}
-	//node.routingTable.mux.Lock()
-	//node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
-	//node.routingTable.mux.Unlock()
+	node.routingTable.mux.Lock()
+	node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
+	node.routingTable.mux.Unlock()
 	go network.Listen()
-	//TODO: Run iterative FIND_NODE on self
-	network.SendPingMessage(NewContact(bootstrapID, bootstrapIP))
-	//TODO: Refresh all buckets further away than the closest neighbor
+	//Run iterative FIND_NODE on self
+	contacts := node.LookupContact(&node.id)
+	for _, c := range contacts {
+		if !node.id.Equals(c.ID) {
+			node.routingTable.mux.Lock()
+			node.routingTable.AddContact(c)
+			node.routingTable.mux.Unlock()
+		}
+	}
+	//TODO???: Refresh all buckets further away than the closest neighbor
 	return network
 }
 
