@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"os"
@@ -28,8 +29,10 @@ func cli(stdin io.Reader, network Network) {
 		cmd := cmdExp.FindString(input)
 		args := strings.TrimSpace(input[len(cmd):])
 		cmd = strings.TrimSpace(cmd)
-
+		h := sha1.New()
 		switch strings.ToLower(cmd) {
+		case "hash":
+			fmt.Println(h.Sum([]byte("Elias väntar med spänning...")))
 		case "ip":
 			fmt.Println("Your IP is: " + GetIP())
 		case "getcontacts":

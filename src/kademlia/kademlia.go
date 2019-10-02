@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"sync"
 )
@@ -141,8 +142,11 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	return result
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
+func (kademlia *Kademlia) Store(data []byte) string {
+	hashValue := string(sha1.New().Sum(data))
+	targetID := NewKademliaID(hashValue)
+	kademlia.LookupContact(targetID)
+	return hashValue
 }
 func (kademlia *Kademlia) PrintIP() {
 	fmt.Println(kademlia.ip)
