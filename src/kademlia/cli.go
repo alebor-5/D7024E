@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/sha1"
 	"fmt"
 	"io"
 	"os"
@@ -29,10 +28,7 @@ func cli(stdin io.Reader, network Network) {
 		cmd := cmdExp.FindString(input)
 		args := strings.TrimSpace(input[len(cmd):])
 		cmd = strings.TrimSpace(cmd)
-		h := sha1.New()
 		switch strings.ToLower(cmd) {
-		case "hash":
-			fmt.Println(h.Sum([]byte("Elias väntar med spänning...")))
 		case "ip":
 			fmt.Println("Your IP is: " + GetIP())
 		case "getcontacts":
@@ -49,19 +45,27 @@ func cli(stdin io.Reader, network Network) {
 			}
 		case "put":
 			if strExp.MatchString(args) {
-				fmt.Println("Store isn't implemented :(")
-				//fmt.Println("Value: " + args[1:len(args)-1])
-				//TODO: Run Store, if successful print the object hash.
+				hash := network.kademlia.StoreData([]byte(args[1 : len(args)-1]))
+				fmt.Println("The data was stored at: " + hash)
 			} else {
-				fmt.Println("put takes exactly 1 argument! e.g. [put \"48656c6c6f2066726f6d20414\"]")
+				fmt.Println("put takes exactly 1 argument! e.g. [put \"Save this string.\"]")
 			}
 		case "get":
 			if strExp.MatchString(args) {
+				hash := args[1 : len(args)-1]
+				if len(hash) == 20 {
+					res, gotVal := network.kademlia.LookupData(hash).([]byte)
+					if gotVal {
+						fmt.Println(string(res))
+					} else {
+						fmt.Println("Could not find the value belongin to the hash:\n" + hash)
+					}
+				} else {
+					fmt.Println("The hash must be exactly 20 bytes long")
+				}
 				fmt.Println("LookupData isn't implemented :(")
-				//fmt.Println("IP: " + args[1:len(args)-1])
-				//TODO: Run LookupData, if successful print the object content.
 			} else {
-				fmt.Println("get takes exactly 1 argument! e.g. [get \"111.111.111:0000\"]")
+				fmt.Println("get takes exactly 1 argument! e.g. [get \"48656c6c6f2066726f6d20414\"]")
 			}
 		case "exit":
 			if spExp.MatchString(args) {
