@@ -19,7 +19,7 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact, me
 	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
 	conn.SetDeadline(time.Now().Add(time.Second * 5))
 	defer conn.Close()
-	fmt.Println("Sending " + method)
+	fmt.Println("Sending " + method + " to " + ip)
 	conn.Write(byteArr)
 	if resAddErr != nil {
 		fmt.Println("Det blev en resAddErr: " + resAddErr.Error())
@@ -36,18 +36,18 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact, me
 		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}, ""}
 	}
 	res := network.HandleResponse(resPacket)
-	fmt.Println("Got a " + res.RPC + " response")
+	fmt.Println("Got a " + res.RPC + " response from " + res.IP)
 	return res
 }
 
 func (network *Network) handleUDPConnection(conn *net.UDPConn) {
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096)
 	n, addr, _ := conn.ReadFromUDP(buffer)
 	recPacket := DecodePacket(buffer[:n])
 	sendResponsePacket := network.HandleRequest(recPacket)
 	//TODO Send response
 
-	network.SendResponse(sendResponsePacket, conn, addr)
+	go network.SendResponse(sendResponsePacket, conn, addr)
 
 }
 
@@ -67,7 +67,6 @@ func (network *Network) Listen() {
 }
 
 func (network *Network) SendPingMessage(contact Contact) {
-	fmt.Println("hej")
 	go network.sendUDP("PING", contact.Address, []Contact{}, "")
 }
 

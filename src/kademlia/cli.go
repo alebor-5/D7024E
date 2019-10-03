@@ -41,7 +41,7 @@ func cli(stdin io.Reader, network Network) {
 			id := NewKademliaID("1111111100000000000000000000000000000000")
 			closest := network.kademlia.LookupContact(id)
 			for _, elem := range closest {
-				fmt.Println(elem.String())
+				fmt.Println(elem.String(), ", Distance: "+elem.ID.CalcDistance(id).String())
 			}
 		case "put":
 			if strExp.MatchString(args) {
