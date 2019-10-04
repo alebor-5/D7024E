@@ -14,6 +14,7 @@ type Kademlia struct {
 	id           KademliaID
 	ip           string
 	routingTable RoutingTable
+	vs           DataStore
 }
 
 type ShortlistItem struct {
@@ -51,7 +52,7 @@ func InitKademliaNode() Kademlia {
 	id := NewRandomKademliaID()
 	ip := GetIP()
 	rt := NewRoutingTable(NewContact(id, ip))
-	return Kademlia{*id, GetIP(), *rt}
+	return Kademlia{*id, GetIP(), *rt, NewDataStore()}
 }
 
 func (kademlia *Kademlia) LookupContact(targetID *KademliaID) []Contact {
