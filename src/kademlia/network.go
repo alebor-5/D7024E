@@ -110,8 +110,47 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	c <- 0
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
+func (network *Network) SendFindDataMessage(shortlist *Shortlist, c chan interface{}, targetID *KademliaID) {
+	var contact Contact
+	var shortItemPtr *ShortlistItem
+
+	(*shortlist).mux.Lock()
+	for i, item := range (*shortlist).ls {
+		if i >= K {
+			(*shortlist).mux.Unlock()
+			return
+		} else if !item.sent {
+			(*shortlist).ls[i].sent = true
+			shortItemPtr = &(*shortlist).ls[i]
+			contact = item.contact
+			break
+		} else if i == len((*shortlist).ls)-1 && item.sent {
+			c <- 0
+			(*shortlist).mux.Unlock()
+			return
+		}
+	}
+	(*shortlist).mux.Unlock()
+	message := EncodeString((*targetID).String())
+
+	response := network.sendUDP("FIND_VALUE", contact.Address, message)
+	if response.RPC == "FIND_VALUE_RESULT_V" {
+		c <- response.Message
+		return
+	}
+	(*shortlist).mux.Lock()
+	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
+		(*shortlist).remove(contact.ID)
+	} else if response.RPC == "FIND_VALUE_RESULT_C" {
+		(*shortItemPtr).visited = true
+		receivedContacts := DecodeContacts(response.Message)
+		for _, con := range receivedContacts {
+			fmt.Println(con.String())
+			(*shortlist).insert(targetID, con)
+		}
+	}
+	(*shortlist).mux.Unlock()
+	c <- 0
 }
 
 func (network *Network) SendStoreMessage(data []byte, contactID *KademliaID) {
