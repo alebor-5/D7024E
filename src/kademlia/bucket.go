@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"fmt"
 )
 
 // bucket definition
@@ -38,7 +39,25 @@ func (bucket *bucket) AddContact(contact Contact) {
 	}
 }
 
-// GetContactAndCalcDistance returns an array of Contacts where 
+// RemoveContact removes a contact from the bucket
+func (bucket *bucket) RemoveContact(contact Contact) {
+	var element *list.Element
+	for e := bucket.list.Front(); e != nil; e = e.Next() {
+		nodeID := e.Value.(Contact).ID
+
+		if (contact).ID.Equals(nodeID) {
+			element = e
+		}
+	}
+
+	if element == nil {
+		fmt.Println("The contact didn't exist in this bucket")
+	} else {
+		bucket.list.Remove(element)
+	}
+}
+
+// GetContactAndCalcDistance returns an array of Contacts where
 // the distance has already been calculated
 func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 	var contacts []Contact
@@ -56,4 +75,3 @@ func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 func (bucket *bucket) Len() int {
 	return bucket.list.Len()
 }
-

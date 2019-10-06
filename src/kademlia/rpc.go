@@ -13,16 +13,16 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 	fmt.Println(packet.RPC + " : " + strconv.Itoa(le))
 	switch packet.RPC {
 	case "PING":
-		network.kademlia.routingTable.mux.Lock()
-		network.kademlia.routingTable.AddContact(contact)
-		network.kademlia.routingTable.mux.Unlock()
+		fmt.Println("Got and ping")
+		//network.kademlia.routingTable.mux.Lock()
+		//network.AddToRoutingTable(contact)
+		//network.kademlia.routingTable.mux.Unlock()
 		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
 	case "FIND_NODE":
 		fmt.Println(idstring)
 		target := NewKademliaID(idstring)
-		network.kademlia.routingTable.mux.Lock()
+
 		returnContacts := network.kademlia.routingTable.FindClosestContacts(target, K+1)
-		network.kademlia.routingTable.mux.Unlock()
 
 		for i, elem := range returnContacts {
 			if contact.ID.Equals(elem.ID) {
@@ -51,13 +51,9 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 	switch packet.RPC {
 	case "PONG":
 		fmt.Println("Got a PONG")
-		network.kademlia.routingTable.mux.Lock()
-		network.kademlia.routingTable.AddContact(contact)
-		network.kademlia.routingTable.mux.Unlock()
+		network.AddToRoutingTable(contact)
 	case "FIND_NODE_RESULT":
-		network.kademlia.routingTable.mux.Lock()
-		network.kademlia.routingTable.AddContact(contact)
-		network.kademlia.routingTable.mux.Unlock()
+		network.AddToRoutingTable(contact)
 	case "UNKNOWN":
 		fmt.Println("The RPC you sent was a non-standard RPC. Please check that the RPC exists in the HandleRequest function.")
 	default:
@@ -65,4 +61,29 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 
 	}
 	return packet
+}
+
+// AddToRoutingTable follows the Kademlia Way to instert a contact into RT
+func (network *Network) AddToRoutingTable(contact Contact) {
+	bucketIndex := network.kademlia.routingTable.getBucketIndex(contact.ID)
+	if network.kademlia.routingTable.buckets[bucketIndex].Len() >= bucketSize {
+		leastRecentlySeen := network.kademlia.routingTable.buckets[bucketIndex].list.Back().Value.(Contact)
+		response := network.sendUDP("PING", leastRecentlySeen.Address, []Contact{}, "")
+		if response.RPC == "PONG" {
+			network.kademlia.routingTable.mux.Lock()
+			network.kademlia.routingTable.AddContact(leastRecentlySeen)
+			network.kademlia.routingTable.mux.Unlock()
+		} else {
+			//Remove leastRecently
+			network.kademlia.routingTable.mux.Lock()
+			network.kademlia.routingTable.RemoveContact(leastRecentlySeen)
+			network.kademlia.routingTable.AddContact(contact)
+			network.kademlia.routingTable.mux.Unlock()
+		}
+	} else {
+		network.kademlia.routingTable.mux.Lock()
+		network.kademlia.routingTable.AddContact(contact)
+		network.kademlia.routingTable.mux.Unlock()
+	}
+
 }
