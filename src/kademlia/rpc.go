@@ -10,14 +10,13 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 	contact := NewContact(&packet.NodeID, packet.IP)
 	switch packet.RPC {
 	case "PING":
-		network.kademlia.routingTable.mux.Lock()
-		network.kademlia.routingTable.AddContact(contact)
-		network.kademlia.routingTable.mux.Unlock()
+		network.AddToRoutingTable(contact)
+		fmt.Println("Got a ping")
 		message := EncodeString("Placeholder Message")
 		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, message)
 	case "FIND_NODE":
 		target := NewKademliaID(idstring)
-
+		network.kademlia.routingTable.mux.Lock()
 		returnContacts := network.kademlia.routingTable.FindClosestContacts(target, K+1)
 		network.kademlia.routingTable.mux.Unlock()
 		for i, elem := range returnContacts {
@@ -63,12 +62,16 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 
 // AddToRoutingTable follows the Kademlia Way to instert a contact into RT
 func (network *Network) AddToRoutingTable(contact Contact) {
+	fmt.Println("Will print now")
 	bucketIndex := network.kademlia.routingTable.getBucketIndex(contact.ID)
 	if network.kademlia.routingTable.buckets[bucketIndex].Len() >= bucketSize {
+		fmt.Println("SIZE ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄR")
+		//fmt.Println(network.kademlia.routingTable.buckets[bucketIndex].Len())
 		leastRecentlySeen := network.kademlia.routingTable.buckets[bucketIndex].list.Back().Value.(Contact)
 		message := EncodeString("Ping message")
 		response := network.sendUDP("PING", leastRecentlySeen.Address, message)
 		if response.RPC == "PONG" {
+			fmt.Println("FICK EN SÅNDÄR PONG och bucketsize är för stor")
 			network.kademlia.routingTable.mux.Lock()
 			network.kademlia.routingTable.AddContact(leastRecentlySeen)
 			network.kademlia.routingTable.mux.Unlock()
