@@ -12,9 +12,9 @@ type Network struct {
 	kademlia *Kademlia
 }
 
-func (network *Network) sendUDP(method string, ip string, contacts []Contact, message string) Packet {
+func (network *Network) sendUDP(method string, ip string, message []byte) Packet {
 	msgSize := int(math.Pow(2, math.Ceil(math.Log2(200+K*100))))
-	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, contacts, message)
+	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, message)
 	RemoteAddr, resAddErr := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
 	conn.SetDeadline(time.Now().Add(time.Second * 5))
@@ -33,7 +33,7 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact, me
 	response, RemoteAddr, err := conn.ReadFromUDP(buffer)
 	resPacket := DecodePacket(buffer[:response])
 	if err != nil {
-		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []Contact{}, ""}
+		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []byte{}}
 	}
 	res := network.HandleResponse(resPacket)
 	fmt.Println("Got a " + res.RPC + " response from " + res.IP)
@@ -41,7 +41,7 @@ func (network *Network) sendUDP(method string, ip string, contacts []Contact, me
 }
 
 func (network *Network) handleUDPConnection(conn *net.UDPConn) {
-	buffer := make([]byte, 4096)
+	buffer := make([]byte, int(math.Pow(2, math.Ceil(math.Log2(200+K*100)))))
 	n, addr, _ := conn.ReadFromUDP(buffer)
 	recPacket := DecodePacket(buffer[:n])
 	sendResponsePacket := network.HandleRequest(recPacket)
@@ -67,7 +67,8 @@ func (network *Network) Listen() {
 }
 
 func (network *Network) SendPingMessage(contact Contact) {
-	go network.sendUDP("PING", contact.Address, []Contact{}, "")
+	message := EncodeString("Just a PING message")
+	go network.sendUDP("PING", contact.Address, message)
 }
 
 func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int, targetID *KademliaID) {
@@ -91,13 +92,17 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 		}
 	}
 	(*shortlist).mux.Unlock()
-	response := network.sendUDP("FIND_NODE", contact.Address, []Contact{}, (*targetID).String())
+	message := EncodeString((*targetID).String())
+
+	response := network.sendUDP("FIND_NODE", contact.Address, message)
 	(*shortlist).mux.Lock()
 	if response.RPC == "UNKNOWN" || response.RPC == "TIMEOUT" {
 		(*shortlist).remove(contact.ID)
 	} else {
 		(*shortItemPtr).visited = true
-		for _, con := range response.Contacts {
+		receivedContacts := DecodeContacts(response.Message)
+		for _, con := range receivedContacts {
+			fmt.Println(con.String())
 			(*shortlist).insert(targetID, con)
 		}
 	}

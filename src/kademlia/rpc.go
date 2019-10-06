@@ -2,28 +2,24 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
+// HandleRequest handles the received packet depending on the RPS attribute of the Packet
 func (network *Network) HandleRequest(packet Packet) []byte {
-	idstring := packet.Message
-	//fmt.Println(idstring)
+	idstring := packet.NodeID.String()
 	contact := NewContact(&packet.NodeID, packet.IP)
-	le := len(packet.Contacts)
-	fmt.Println(packet.RPC + " : " + strconv.Itoa(le))
 	switch packet.RPC {
 	case "PING":
-		fmt.Println("Got and ping")
-		//network.kademlia.routingTable.mux.Lock()
-		//network.AddToRoutingTable(contact)
-		//network.kademlia.routingTable.mux.Unlock()
-		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
+		network.kademlia.routingTable.mux.Lock()
+		network.kademlia.routingTable.AddContact(contact)
+		network.kademlia.routingTable.mux.Unlock()
+		message := EncodeString("Placeholder Message")
+		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, message)
 	case "FIND_NODE":
-		fmt.Println(idstring)
 		target := NewKademliaID(idstring)
 
 		returnContacts := network.kademlia.routingTable.FindClosestContacts(target, K+1)
-
+		network.kademlia.routingTable.mux.Unlock()
 		for i, elem := range returnContacts {
 			if contact.ID.Equals(elem.ID) {
 				fst := returnContacts[:i]
@@ -38,14 +34,16 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		if len(returnContacts) > K {
 			returnContacts = returnContacts[:K]
 		}
-
-		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, returnContacts, "")
+		message := EncodeContacts(returnContacts)
+		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, message)
 	default:
 		fmt.Println("UNKNOWN REQUEST RPC: " + packet.RPC + ", sending a default Message")
-		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, []Contact{}, "")
+		message := EncodeString("I don't understand the following RPC:" + packet.RPC)
+		return EncodePacket("UNKNOWN", network.kademlia.id, network.kademlia.ip, message)
 	}
 }
 
+// HandleResponse is the method that is called whenever a sender receives a message from the original recipient
 func (network *Network) HandleResponse(packet Packet) Packet {
 	contact := NewContact(&packet.NodeID, packet.IP)
 	switch packet.RPC {
@@ -68,7 +66,8 @@ func (network *Network) AddToRoutingTable(contact Contact) {
 	bucketIndex := network.kademlia.routingTable.getBucketIndex(contact.ID)
 	if network.kademlia.routingTable.buckets[bucketIndex].Len() >= bucketSize {
 		leastRecentlySeen := network.kademlia.routingTable.buckets[bucketIndex].list.Back().Value.(Contact)
-		response := network.sendUDP("PING", leastRecentlySeen.Address, []Contact{}, "")
+		message := EncodeString("Ping message")
+		response := network.sendUDP("PING", leastRecentlySeen.Address, message)
 		if response.RPC == "PONG" {
 			network.kademlia.routingTable.mux.Lock()
 			network.kademlia.routingTable.AddContact(leastRecentlySeen)
