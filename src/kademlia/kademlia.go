@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strconv"
 	"sync"
 )
 
@@ -35,6 +37,7 @@ func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	//TODO: Run iterative FIND_NODE on self
 	network.SendPingMessage(NewContact(bootstrapID, bootstrapIP))
 	//TODO: Refresh all buckets further away than the closest neighbor
+	node.Refresh()
 	return network
 }
 
@@ -137,4 +140,50 @@ func (kademlia *Kademlia) Store(data []byte) {
 }
 func (kademlia *Kademlia) PrintIP() {
 	fmt.Println(kademlia.ip)
+}
+
+func (kademlia *Kademlia) Refresh() {
+	bitString := ""
+	tempArr := [IDLength]string{}
+	for i := 0; i <= IDLength-1; i++ {
+
+		bitstring := strconv.FormatInt(int64(kademlia.id[i]), 2)
+		for j := len(bitstring); j < 8; j++ {
+			bitstring = "0" + bitstring
+
+		}
+		tempArr[i] = bitstring
+		fmt.Println(bitString)
+	}
+
+	for i := 0; i < IDLength; i++ {
+		temp := tempArr
+		for j := 0; j < 8; j++ {
+			if string(temp[i][j]) == "1" {
+				temp[i] = temp[i][:j] + string("0") + temp[i][:j+1]
+			} else {
+				temp[i] = temp[i][:j] + string("1") + temp[i][:j+1]
+			}
+			hexArr := [IDLength]byte{}
+			for y := 0; y < IDLength; y++ {
+				t, _ := strconv.ParseUint(temp[y], 2, 64)
+				b := byte(t)
+				hexArr[y] = b
+				//fmt.Println(t)
+			}
+			//fmt.Println(hexArr)
+			bucketKademliaID := hex.EncodeToString(hexArr[0:IDLength])
+			//fmt.Println(bucketKademliaID)
+			go kademlia.LookupContact(NewKademliaID(bucketKademliaID))
+		}
+
+		//temp = string(temp)
+		//temp1, _ := strconv.ParseUint(temp, 2, 64)
+		//fmt.Println(temp1)
+		//fmt.Println(hex.DecodeString(temp))
+		//kadId := NewKademliaID(temp1)
+		//fmt.Println(kadId.String())
+		//kademlia.LookupContact()
+	}
+	fmt.Println(len(bitString))
 }
