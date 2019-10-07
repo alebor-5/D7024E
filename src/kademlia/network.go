@@ -153,8 +153,8 @@ func (network *Network) SendFindDataMessage(shortlist *Shortlist, c chan interfa
 	c <- 0
 }
 
-func (network *Network) SendStoreMessage(data []byte, contactID *KademliaID) {
-	// TODO
+func (network *Network) SendStoreMessage(data []byte, contact Contact) {
+	go network.sendUDP("STORE", contact.Address, data)
 }
 
 func GetIP() string {

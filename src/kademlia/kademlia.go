@@ -156,7 +156,7 @@ func (kademlia *Kademlia) StoreData(data []byte) string {
 	targetID := NewKademliaID(hashValue)
 	contacts := kademlia.LookupContact(targetID)
 	for _, c := range contacts {
-		go net.SendStoreMessage(data, c.ID)
+		go net.SendStoreMessage(data, c)
 	}
 	return hashValue
 }
