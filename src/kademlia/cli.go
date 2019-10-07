@@ -31,6 +31,8 @@ func cli(stdin io.Reader, network Network) {
 		switch strings.ToLower(cmd) {
 		case "ip":
 			fmt.Println("Your IP is: " + GetIP())
+		case "refresh":
+			network.kademlia.Refresh()
 		case "getcontacts":
 			network.kademlia.routingTable.getAllContacts()
 		case "getnodeid":
