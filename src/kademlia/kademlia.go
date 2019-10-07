@@ -4,11 +4,12 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"sync"
 )
 
 const alpha = 3
-const K = 10
+const K = 5
 
 type Kademlia struct {
 	id           KademliaID
@@ -108,6 +109,10 @@ func lookupDone(shortlist *Shortlist) bool {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) interface{} {
+	res, isVal := kademlia.vs.GetIfExists(hash).([]byte)
+	if isVal {
+		return res
+	}
 	targetID := NewKademliaID(hash)
 	net := Network{kademlia}
 	shortlist := Shortlist{}
@@ -128,6 +133,12 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 
 	for !lookupDone(&shortlist) {
 		res, isVal := (<-c).([]byte)
+		shortlist.mux.Lock()
+		for _, item := range shortlist.ls {
+			fmt.Println("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
+		}
+		shortlist.mux.Unlock()
+		fmt.Println(strconv.FormatBool(isVal))
 		if isVal {
 			return res
 		}
@@ -152,9 +163,12 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 
 func (kademlia *Kademlia) StoreData(data []byte) string {
 	net := Network{kademlia}
-	hashValue := hex.EncodeToString(sha1.New().Sum(data))
+	hashValue := hex.EncodeToString(sha1.New().Sum(data)[0:IDLength])
 	targetID := NewKademliaID(hashValue)
-	contacts := kademlia.LookupContact(targetID)
+	kademlia.routingTable.mux.Lock()
+	contacts := kademlia.routingTable.FindClosestContacts(targetID, K)
+	kademlia.routingTable.mux.Unlock()
+	// TODO: contacts := kademlia.LookupContact(targetID)
 	for _, c := range contacts {
 		go net.SendStoreMessage(data, c)
 	}

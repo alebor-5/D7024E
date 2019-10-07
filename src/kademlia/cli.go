@@ -53,7 +53,7 @@ func cli(stdin io.Reader, network Network) {
 		case "get":
 			if strExp.MatchString(args) {
 				hash := args[1 : len(args)-1]
-				if len(hash) == 20 {
+				if len(hash) == 40 {
 					res, gotVal := network.kademlia.LookupData(hash).([]byte)
 					if gotVal {
 						fmt.Println(string(res))
@@ -63,7 +63,6 @@ func cli(stdin io.Reader, network Network) {
 				} else {
 					fmt.Println("The hash must be exactly 20 bytes long")
 				}
-				fmt.Println("LookupData isn't implemented :(")
 			} else {
 				fmt.Println("get takes exactly 1 argument! e.g. [get \"48656c6c6f2066726f6d20414\"]")
 			}

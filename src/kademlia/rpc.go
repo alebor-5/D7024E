@@ -21,7 +21,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		message := DecodeString(packet.Message)
 		res, b := network.kademlia.vs.GetIfExists(message).([]byte)
 		if b {
-			return EncodePacket("FIND_VALUE_V", network.kademlia.id, network.kademlia.ip, res)
+			return EncodePacket("FIND_VALUE_RESULT_V", network.kademlia.id, network.kademlia.ip, res)
 		} else {
 			//PUT THIS IN A FUNCTION
 			target := NewKademliaID(idstring)
@@ -44,7 +44,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 				returnContacts = returnContacts[:K]
 			}
 			message := EncodeContacts(returnContacts)
-			return EncodePacket("FIND_VALUE_C", network.kademlia.id, network.kademlia.ip, message)
+			return EncodePacket("FIND_VALUE_RESULT_C", network.kademlia.id, network.kademlia.ip, message)
 		}
 	case "FIND_NODE":
 		target := NewKademliaID(idstring)
@@ -70,7 +70,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, message)
 	case "STORE":
 		message := packet.Message
-		hashValue := hex.EncodeToString(sha1.New().Sum(message))
+		hashValue := hex.EncodeToString(sha1.New().Sum(message)[0:IDLength])
 		network.kademlia.vs.Insert(hashValue, message)
 		pongMessage := EncodeString("Pong Message for STORE RPC")
 		return EncodePacket("PONG", network.kademlia.id, network.kademlia.ip, pongMessage)
@@ -94,11 +94,11 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
-	case "FIND_VALUE_V":
+	case "FIND_VALUE_RESULT_V":
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
-	case "FIND_VALUE_C":
+	case "FIND_VALUE_RESULT_C":
 		network.kademlia.routingTable.mux.Lock()
 		network.kademlia.routingTable.AddContact(contact)
 		network.kademlia.routingTable.mux.Unlock()
