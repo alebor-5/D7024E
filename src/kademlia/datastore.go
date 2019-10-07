@@ -29,5 +29,4 @@ func (ds DataStore) GetIfExists(key string) interface{} {
 		return val
 	}
 	return false
-
 }

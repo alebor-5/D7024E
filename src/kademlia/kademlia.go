@@ -112,7 +112,7 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	net := Network{kademlia}
 	shortlist := Shortlist{}
 	initContacts := kademlia.routingTable.FindClosestContacts(targetID, alpha)
-	c := make(chan int, alpha)
+	c := make(chan interface{}, alpha)
 	if len(initContacts) < 1 {
 		return []Contact{}
 	}
@@ -123,12 +123,15 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	}
 
 	for i := 0; i < alpha; i++ {
-		go net.SendFindContactMessage(&shortlist, c, targetID)
+		go net.SendFindDataMessage(&shortlist, c, targetID)
 	}
 
 	for !lookupDone(&shortlist) {
-		<-c
-		go net.SendFindContactMessage(&shortlist, c, targetID)
+		res, isVal := (<-c).([]byte)
+		if isVal {
+			return res
+		}
+		go net.SendFindDataMessage(&shortlist, c, targetID)
 	}
 
 	shortlist.mux.Lock()
