@@ -69,7 +69,7 @@ func cli(stdin io.Reader, network Network) {
 			}
 		case "exit":
 			if spExp.MatchString(args) {
-				fmt.Print("This will terminate the node. Continue? [Y/n]: ")
+				fmt.Print("This will terminate the node. Continue? [y/N]: ")
 				answer, _ := reader.ReadString('\n')
 				answer = strings.TrimSuffix(answer, "\n")
 				if strings.ToLower(answer) == "y" {
