@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -8,12 +9,13 @@ import (
 )
 
 const alpha = 3
-const K = 10
+const K = 5
 
 type Kademlia struct {
 	id           KademliaID
 	ip           string
 	routingTable RoutingTable
+	vs           DataStore
 }
 
 type ShortlistItem struct {
@@ -30,12 +32,12 @@ type Shortlist struct {
 func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	node := InitKademliaNode()
 	network := Network{&node}
-	//node.routingTable.mux.Lock()
-	//node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
-	//node.routingTable.mux.Unlock()
+	node.routingTable.mux.Lock()
+	node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
+	node.routingTable.mux.Unlock()
 	go network.Listen()
 	//TODO: Run iterative FIND_NODE on self
-	network.SendPingMessage(NewContact(bootstrapID, bootstrapIP))
+	node.LookupContact(&node.id)
 	//TODO: Refresh all buckets further away than the closest neighbor
 	node.Refresh()
 	return network
@@ -45,7 +47,7 @@ func InitKademliaNode() Kademlia {
 	id := NewRandomKademliaID()
 	ip := GetIP()
 	rt := NewRoutingTable(NewContact(id, ip))
-	return Kademlia{*id, GetIP(), *rt}
+	return Kademlia{*id, GetIP(), *rt, NewDataStore()}
 }
 
 func (kademlia *Kademlia) LookupContact(targetID *KademliaID) []Contact {
@@ -53,13 +55,14 @@ func (kademlia *Kademlia) LookupContact(targetID *KademliaID) []Contact {
 	shortlist := Shortlist{}
 	initContacts := kademlia.routingTable.FindClosestContacts(targetID, alpha)
 	c := make(chan int, alpha)
-
+	if len(initContacts) < 1 {
+		return []Contact{}
+	}
 	for _, contact := range initContacts {
 		shortlist.mux.Lock()
 		shortlist.insert(targetID, contact)
 		shortlist.mux.Unlock()
 	}
-
 	for i := 0; i < alpha; i++ {
 		go net.SendFindContactMessage(&shortlist, c, targetID)
 	}
@@ -99,6 +102,76 @@ func lookupDone(shortlist *Shortlist) bool {
 	return true
 }
 
+func (kademlia *Kademlia) LookupData(hash string) interface{} {
+	res, isVal := kademlia.vs.GetIfExists(hash).([]byte)
+	if isVal {
+		return res
+	}
+	targetID := NewKademliaID(hash)
+	net := Network{kademlia}
+	shortlist := Shortlist{}
+	initContacts := kademlia.routingTable.FindClosestContacts(targetID, alpha)
+	c := make(chan interface{}, alpha)
+	if len(initContacts) < 1 {
+		return []Contact{}
+	}
+	for _, contact := range initContacts {
+		shortlist.mux.Lock()
+		shortlist.insert(targetID, contact)
+		shortlist.mux.Unlock()
+	}
+
+	for i := 0; i < alpha; i++ {
+		go net.SendFindDataMessage(&shortlist, c, targetID)
+	}
+
+	for !lookupDone(&shortlist) {
+		res, isVal := (<-c).([]byte)
+		shortlist.mux.Lock()
+		for _, item := range shortlist.ls {
+			fmt.Println("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
+		}
+		shortlist.mux.Unlock()
+		fmt.Println(strconv.FormatBool(isVal))
+		if isVal {
+			return res
+		}
+		go net.SendFindDataMessage(&shortlist, c, targetID)
+	}
+
+	shortlist.mux.Lock()
+	var length int
+	if len(shortlist.ls) < K {
+		length = len(shortlist.ls)
+	} else {
+		length = K
+	}
+	result := []Contact{}
+	for i := 0; i < length; i++ {
+		result = append(result, shortlist.ls[i].contact)
+	}
+	shortlist.mux.Unlock()
+
+	return result
+}
+
+func (kademlia *Kademlia) StoreData(data []byte) string {
+	net := Network{kademlia}
+	hashValue := hex.EncodeToString(sha1.New().Sum(data)[0:IDLength])
+	targetID := NewKademliaID(hashValue)
+	kademlia.routingTable.mux.Lock()
+	contacts := kademlia.routingTable.FindClosestContacts(targetID, K)
+	kademlia.routingTable.mux.Unlock()
+	// TODO: contacts := kademlia.LookupContact(targetID)
+	for _, c := range contacts {
+		go net.SendStoreMessage(data, c)
+	}
+	return hashValue
+}
+func (kademlia *Kademlia) PrintIP() {
+	fmt.Println(kademlia.ip)
+}
+
 // Inserts item sorted by distance to target
 func (shortlist *Shortlist) insert(target *KademliaID, contact Contact) {
 	conDist := contact.ID.CalcDistance(target)
@@ -129,17 +202,6 @@ func (shortlist *Shortlist) remove(id *KademliaID) {
 			return
 		}
 	}
-}
-
-func (kademlia *Kademlia) LookupData(hash string) {
-	// TODO
-}
-
-func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
-}
-func (kademlia *Kademlia) PrintIP() {
-	fmt.Println(kademlia.ip)
 }
 
 func (kademlia *Kademlia) Refresh() {
