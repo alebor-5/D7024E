@@ -2,7 +2,6 @@ package main
 
 import (
 	"container/list"
-	"fmt"
 )
 
 // bucket definition
@@ -51,7 +50,7 @@ func (bucket *bucket) RemoveContact(contact Contact) {
 	}
 
 	if element == nil {
-		fmt.Println("The contact didn't exist in this bucket")
+		Log("The contact didn't exist in this bucket")
 	} else {
 		bucket.list.Remove(element)
 	}

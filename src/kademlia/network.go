@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"net"
 	"strings"
@@ -15,18 +14,12 @@ type Network struct {
 func (network *Network) sendUDP(method string, ip string, message []byte) Packet {
 	msgSize := int(math.Pow(2, math.Ceil(math.Log2(200+K*100))))
 	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, message)
-	RemoteAddr, resAddErr := net.ResolveUDPAddr("udp", ip+":6000")
-	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
+	RemoteAddr, _ := net.ResolveUDPAddr("udp", ip+":6000")
+	conn, _ := net.DialUDP("udp", nil, RemoteAddr)
 	conn.SetDeadline(time.Now().Add(time.Millisecond * 50))
 	defer conn.Close()
-	fmt.Println("Sending " + method + " to " + ip)
+	Log("Sending a " + method + " RPC to IP address: " + ip)
 	conn.Write(byteArr)
-	if resAddErr != nil {
-		fmt.Println("Det blev en resAddErr: " + resAddErr.Error())
-	}
-	if dialErr != nil {
-		fmt.Println("Det blev en dialErr: " + dialErr.Error())
-	}
 
 	// This is to handle the response from
 	buffer := make([]byte, msgSize)
@@ -36,7 +29,7 @@ func (network *Network) sendUDP(method string, ip string, message []byte) Packet
 		resPacket = Packet{"TIMEOUT", ip, network.kademlia.id, []byte{}}
 	}
 	res := network.HandleResponse(resPacket)
-	fmt.Println("Got a " + res.RPC + " response from " + res.IP)
+	Log("Received a " + res.RPC + " RPC from IP address: " + res.IP)
 	return res
 }
 
@@ -107,7 +100,7 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	} else {
 		receivedContacts := DecodeContacts(response.Message)
 		for _, con := range receivedContacts {
-			fmt.Println(con.String())
+			Log("SendFindContactMessage: Received contact: " + con.String())
 			(*shortlist).insert(targetID, con)
 		}
 	}
