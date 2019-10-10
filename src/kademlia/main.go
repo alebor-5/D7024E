@@ -13,7 +13,7 @@ func main() {
 
 	flag.Parse()
 	if *isBootstrapPtr {
-		network = Network{&Kademlia{*bootstrapID, bootstrapIP, *NewRoutingTable(NewContact(bootstrapID, bootstrapIP))}}
+		network = Network{&Kademlia{*bootstrapID, bootstrapIP, *NewRoutingTable(NewContact(bootstrapID, bootstrapIP)), NewDataStore()}}
 		go network.Listen()
 	} else {
 		network = JoinNetwork(bootstrapID, bootstrapIP)

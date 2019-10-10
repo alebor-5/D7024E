@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const bucketSize = 20
+const bucketSize = K
 
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets
@@ -28,6 +28,9 @@ func NewRoutingTable(me Contact) *RoutingTable {
 
 // AddContact add a new contact to the correct Bucket
 func (routingTable *RoutingTable) AddContact(contact Contact) {
+	if contact.ID.Equals(routingTable.me.ID) {
+		return
+	}
 	bucketIndex := routingTable.getBucketIndex(contact.ID)
 	bucket := routingTable.buckets[bucketIndex]
 	bucket.AddContact(contact)
