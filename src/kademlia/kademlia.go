@@ -128,11 +128,7 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	for !lookupDone(&shortlist) {
 		res, isVal := (<-c).([]byte)
 		shortlist.mux.Lock()
-		for _, item := range shortlist.ls {
-			fmt.Println("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
-		}
 		shortlist.mux.Unlock()
-		fmt.Println(strconv.FormatBool(isVal))
 		if isVal {
 			return res
 		}

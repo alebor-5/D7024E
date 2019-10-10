@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 )
 
 func TestDS(t *testing.T) {
+	fmt.Println("TestDS")
 	ds := NewDataStore()
 	key := "superkey"
 	val := []byte{0, 0, 0}

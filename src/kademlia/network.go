@@ -17,7 +17,7 @@ func (network *Network) sendUDP(method string, ip string, message []byte) Packet
 	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, message)
 	RemoteAddr, resAddErr := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
-	conn.SetDeadline(time.Now().Add(time.Second * 5))
+	conn.SetDeadline(time.Now().Add(time.Millisecond * 50))
 	defer conn.Close()
 	fmt.Println("Sending " + method + " to " + ip)
 	conn.Write(byteArr)
@@ -75,6 +75,9 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	var contact Contact
 
 	(*shortlist).mux.Lock()
+	/*if len((*shortlist).ls) == 0 {
+		return
+	}*/
 	for i, item := range (*shortlist).ls {
 		if i >= K {
 			(*shortlist).mux.Unlock()
@@ -83,7 +86,7 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 			(*shortlist).ls[i].sent = true
 			contact = item.contact
 			break
-		} else if i == len((*shortlist).ls)-1 && item.sent {
+		} else if i >= len((*shortlist).ls)-1 && item.sent {
 			c <- 0
 			(*shortlist).mux.Unlock()
 			return
@@ -124,7 +127,7 @@ func (network *Network) SendFindDataMessage(shortlist *Shortlist, c chan interfa
 			(*shortlist).ls[i].sent = true
 			contact = item.contact
 			break
-		} else if i == len((*shortlist).ls)-1 && item.sent {
+		} else if i >= len((*shortlist).ls)-1 && item.sent {
 			c <- 0
 			(*shortlist).mux.Unlock()
 			return
@@ -161,7 +164,7 @@ func (network *Network) SendStoreMessage(data []byte, contact Contact) {
 }
 
 func GetIP() string {
-	ip := "localhost"
+	ip := "eth0 doesn't exists"
 	interfaces, _ := net.Interfaces()
 	for _, i := range interfaces {
 		byNameInterface, _ := net.InterfaceByName(i.Name)
