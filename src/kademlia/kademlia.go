@@ -36,9 +36,7 @@ func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
 	node.routingTable.mux.Unlock()
 	go network.Listen()
-	//TODO: Run iterative FIND_NODE on self
 	node.LookupContact(&node.id)
-	//TODO: Refresh all buckets further away than the closest neighbor
 	node.Refresh()
 	return network
 }
