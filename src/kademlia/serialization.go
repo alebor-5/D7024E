@@ -13,16 +13,6 @@ type Packet struct {
 	Message []byte
 }
 
-/*
-func (packet *Packet) String() string {
-	temp := ""
-	for _, elem := range (*packet).Contacts {
-		temp += ", " + elem.String()
-	}
-	return "Header: \n" + "\tRPC: " + packet.RPC + "\n\tNodeID: " + packet.NodeID.String() + "\n\tIP: " + packet.IP + "\nPayload:\n\tContacts:" + temp
-}
-*/
-
 // EncodePacket returns a byte array
 func EncodePacket(rpc string, nodeID KademliaID, ip string, message []byte) []byte {
 	packet := Packet{rpc, ip, nodeID, message}
