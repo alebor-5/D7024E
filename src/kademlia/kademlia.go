@@ -36,9 +36,7 @@ func JoinNetwork(bootstrapID *KademliaID, bootstrapIP string) Network {
 	node.routingTable.AddContact(NewContact(bootstrapID, bootstrapIP))
 	node.routingTable.mux.Unlock()
 	go network.Listen()
-	//TODO: Run iterative FIND_NODE on self
 	node.LookupContact(&node.id)
-	//TODO: Refresh all buckets further away than the closest neighbor
 	node.Refresh()
 	return network
 }
@@ -128,11 +126,7 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	for !lookupDone(&shortlist) {
 		res, isVal := (<-c).([]byte)
 		shortlist.mux.Lock()
-		for _, item := range shortlist.ls {
-			fmt.Println("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
-		}
 		shortlist.mux.Unlock()
-		fmt.Println(strconv.FormatBool(isVal))
 		if isVal {
 			return res
 		}
