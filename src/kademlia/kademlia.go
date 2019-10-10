@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"sync"
 )
@@ -128,11 +127,11 @@ func (kademlia *Kademlia) LookupData(hash string) interface{} {
 	for !lookupDone(&shortlist) {
 		res, isVal := (<-c).([]byte)
 		shortlist.mux.Lock()
+		Log("From LookupData: ")
 		for _, item := range shortlist.ls {
-			fmt.Println("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
+			Log("IP: " + item.contact.Address + " Sent: " + strconv.FormatBool(item.sent) + " Visited: " + strconv.FormatBool(item.visited))
 		}
 		shortlist.mux.Unlock()
-		fmt.Println(strconv.FormatBool(isVal))
 		if isVal {
 			return res
 		}
@@ -167,9 +166,6 @@ func (kademlia *Kademlia) StoreData(data []byte) string {
 		go net.SendStoreMessage(data, c)
 	}
 	return hashValue
-}
-func (kademlia *Kademlia) PrintIP() {
-	fmt.Println(kademlia.ip)
 }
 
 // Inserts item sorted by distance to target
@@ -219,7 +215,6 @@ func (kademlia *Kademlia) Refresh() {
 		tempArr[i] = bitstring
 	}
 	//Here temp array is the binary list of the KademliaID
-	//fmt.Println(tempArr)
 	emptyBucketFlag := true
 	for i := IDLength - 1; i >= 0; i-- {
 		for j := 7; j >= 0; j-- {
@@ -231,7 +226,6 @@ func (kademlia *Kademlia) Refresh() {
 				temp[i] = temp[i][:j] + string("1") + temp[i][j+1:]
 			}
 			hexArr := [IDLength]byte{}
-			//fmt.Println(temp)
 			//This for-loop makes the binary array into the same format as the KademliaID
 			for y := 0; y < IDLength; y++ {
 				t, _ := strconv.ParseUint(temp[y], 2, 64)
@@ -243,10 +237,9 @@ func (kademlia *Kademlia) Refresh() {
 			bucketKademliaID := hex.EncodeToString(hexArr[0:IDLength])
 			//This is to get the bucketindex for the new kademliaID:
 			bucketIndex := kademlia.routingTable.getBucketIndex(NewKademliaID(bucketKademliaID))
-			//fmt.Println("Här är :" + bucketKademliaID + " med bucket nr " + strconv.Itoa(bucketIndex))
 			if kademlia.routingTable.buckets[bucketIndex].Len() != 0 || !emptyBucketFlag == true {
 				emptyBucketFlag = false
-				//fmt.Println("PINGAR I REFRESH till bucket" + strconv.Itoa(bucketIndex))
+				Log("Refresh: Now sending a PING to a KademliaID belonging to bucket " + strconv.Itoa(bucketIndex))
 				go kademlia.LookupContact(NewKademliaID(bucketKademliaID))
 			}
 		}

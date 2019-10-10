@@ -29,22 +29,21 @@ func cli(stdin io.Reader, network Network) {
 		args := strings.TrimSpace(input[len(cmd):])
 		cmd = strings.TrimSpace(cmd)
 		switch strings.ToLower(cmd) {
-		case "ip":
-			fmt.Println("Your IP is: " + GetIP())
-		case "refresh":
-			network.kademlia.Refresh()
-		case "getcontacts":
-			network.kademlia.routingTable.getAllContacts()
-		case "getnodeid":
-			fmt.Println("Your nodeID is: " + network.kademlia.id.String())
-		case "ping":
-			network.SendPingMessage(NewContact(NewRandomKademliaID(), args[1:len(args)-1]))
-		case "find0":
-			id := NewKademliaID("1111111100000000000000000000000000000000")
-			closest := network.kademlia.LookupContact(id)
-			for _, elem := range closest {
-				fmt.Println(elem.String(), ", Distance: "+elem.ID.CalcDistance(id).String())
-			}
+		case "enablelog":
+			fmt.Println("Logs are now enabled")
+			EnableLogs()
+		case "disablelog":
+			fmt.Println("Logs are now disabled")
+			DisableLogs()
+		case "help":
+			fmt.Print("\n\n")
+			fmt.Println("put [string] - Uploads [string] to the Kademlia network, outputs the hash of the uploaded string.")
+			fmt.Println("get [hash] - Outputs object corresponding to the [hash] if the object exists in the network. ")
+			fmt.Println("exit - Terminates the node.")
+			fmt.Println("help - Displays this information.")
+			fmt.Println("enablelog - Enable direct logging")
+			fmt.Println("disablelog - Disable direct logging")
+			fmt.Print("\n\n")
 		case "put":
 			if strExp.MatchString(args) {
 				hash := network.kademlia.StoreData([]byte(args[1 : len(args)-1]))
@@ -82,7 +81,15 @@ func cli(stdin io.Reader, network Network) {
 				fmt.Println("exit doesn't take any arguments!")
 			}
 		default:
+			fmt.Print("\n\n")
 			fmt.Println("Unknown command: " + cmd)
+			fmt.Println("put [string] - Uploads [string] to the Kademlia network, outputs the hash of the uploaded string.")
+			fmt.Println("get [hash] - Outputs object corresponding to the [hash] if the object exists in the network. ")
+			fmt.Println("exit - Terminates the node.")
+			fmt.Println("help - Displays this information.")
+			fmt.Println("enablelog - Enable direct logging")
+			fmt.Println("disablelog - Disable direct logging")
+			fmt.Print("\n\n")
 		}
 	}
 }
