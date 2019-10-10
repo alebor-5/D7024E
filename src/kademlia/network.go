@@ -75,6 +75,9 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 	var contact Contact
 
 	(*shortlist).mux.Lock()
+	/*if len((*shortlist).ls) == 0 {
+		return
+	}*/
 	for i, item := range (*shortlist).ls {
 		if i >= K {
 			(*shortlist).mux.Unlock()
@@ -83,7 +86,7 @@ func (network *Network) SendFindContactMessage(shortlist *Shortlist, c chan int,
 			(*shortlist).ls[i].sent = true
 			contact = item.contact
 			break
-		} else if i == len((*shortlist).ls)-1 && item.sent {
+		} else if i >= len((*shortlist).ls)-1 && item.sent {
 			c <- 0
 			(*shortlist).mux.Unlock()
 			return
@@ -124,7 +127,7 @@ func (network *Network) SendFindDataMessage(shortlist *Shortlist, c chan interfa
 			(*shortlist).ls[i].sent = true
 			contact = item.contact
 			break
-		} else if i == len((*shortlist).ls)-1 && item.sent {
+		} else if i >= len((*shortlist).ls)-1 && item.sent {
 			c <- 0
 			(*shortlist).mux.Unlock()
 			return
