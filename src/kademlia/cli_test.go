@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 )
 
 func TestCLI(t *testing.T) {
+	fmt.Println("ExampleCLI")
 	node := InitKademliaNode()
 	network := Network{&node}
 	var stdin bytes.Buffer
