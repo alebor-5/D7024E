@@ -204,48 +204,51 @@ func (shortlist *Shortlist) remove(id *KademliaID) {
 	}
 }
 
+// Refresh simply loops through the 160-bit version of the local KademliaID
+// It then flips one bit each, starting from the LSB until it reaches the MSB.
+// For each change, it does a iterative find_node on that KademliaID
+// The emptyBucketFlag is a check so that a find_node isn't sent until a bucket is populated
 func (kademlia *Kademlia) Refresh() {
-	bitString := ""
 	tempArr := [IDLength]string{}
 	for i := 0; i <= IDLength-1; i++ {
-
 		bitstring := strconv.FormatInt(int64(kademlia.id[i]), 2)
 		for j := len(bitstring); j < 8; j++ {
 			bitstring = "0" + bitstring
 
 		}
 		tempArr[i] = bitstring
-		fmt.Println(bitString)
 	}
-
-	for i := 0; i < IDLength; i++ {
-		temp := tempArr
-		for j := 0; j < 8; j++ {
+	//Here temp array is the binary list of the KademliaID
+	//fmt.Println(tempArr)
+	emptyBucketFlag := true
+	for i := IDLength - 1; i >= 0; i-- {
+		for j := 7; j >= 0; j-- {
+			temp := tempArr
+			//This if statement simply flips the [i][j] bit
 			if string(temp[i][j]) == "1" {
-				temp[i] = temp[i][:j] + string("0") + temp[i][:j+1]
+				temp[i] = temp[i][:j] + string("0") + temp[i][j+1:]
 			} else {
-				temp[i] = temp[i][:j] + string("1") + temp[i][:j+1]
+				temp[i] = temp[i][:j] + string("1") + temp[i][j+1:]
 			}
 			hexArr := [IDLength]byte{}
+			//fmt.Println(temp)
+			//This for-loop makes the binary array into the same format as the KademliaID
 			for y := 0; y < IDLength; y++ {
 				t, _ := strconv.ParseUint(temp[y], 2, 64)
 				b := byte(t)
 				hexArr[y] = b
-				//fmt.Println(t)
-			}
-			//fmt.Println(hexArr)
-			bucketKademliaID := hex.EncodeToString(hexArr[0:IDLength])
-			//fmt.Println(bucketKademliaID)
-			go kademlia.LookupContact(NewKademliaID(bucketKademliaID))
-		}
 
-		//temp = string(temp)
-		//temp1, _ := strconv.ParseUint(temp, 2, 64)
-		//fmt.Println(temp1)
-		//fmt.Println(hex.DecodeString(temp))
-		//kadId := NewKademliaID(temp1)
-		//fmt.Println(kadId.String())
-		//kademlia.LookupContact()
+			}
+
+			bucketKademliaID := hex.EncodeToString(hexArr[0:IDLength])
+			//This is to get the bucketindex for the new kademliaID:
+			bucketIndex := kademlia.routingTable.getBucketIndex(NewKademliaID(bucketKademliaID))
+			//fmt.Println("Här är :" + bucketKademliaID + " med bucket nr " + strconv.Itoa(bucketIndex))
+			if kademlia.routingTable.buckets[bucketIndex].Len() != 0 || !emptyBucketFlag == true {
+				emptyBucketFlag = false
+				//fmt.Println("PINGAR I REFRESH till bucket" + strconv.Itoa(bucketIndex))
+				go kademlia.LookupContact(NewKademliaID(bucketKademliaID))
+			}
+		}
 	}
-	fmt.Println(len(bitString))
 }
