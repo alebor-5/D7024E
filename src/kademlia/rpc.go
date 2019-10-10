@@ -68,7 +68,7 @@ func (network *Network) HandleRequest(packet Packet) []byte {
 			returnContacts = returnContacts[:K]
 		}
 		message := EncodeContacts(returnContacts)
-		return EncodePacket("FIND_NODE_RESULT", network.kademlia.id, network.kademlia.ip, message)
+		return EncodePacket("FIND_N0DE_RESULT", network.kademlia.id, network.kademlia.ip, message)
 	case "STORE":
 		message := packet.Message
 		hashValue := hex.EncodeToString(sha1.New().Sum(message)[0:IDLength])
@@ -89,7 +89,7 @@ func (network *Network) HandleResponse(packet Packet) Packet {
 	case "PONG":
 		fmt.Println("Got a PONG")
 		network.AddToRoutingTable(contact)
-	case "FIND_NODE_RESULT":
+	case "FIND_N0DE_RESULT":
 		network.AddToRoutingTable(contact)
 	case "FIND_VALUE_RESULT_V":
 		network.AddToRoutingTable(contact)

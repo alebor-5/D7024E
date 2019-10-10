@@ -164,7 +164,7 @@ func (network *Network) SendStoreMessage(data []byte, contact Contact) {
 }
 
 func GetIP() string {
-	ip := "localhost"
+	ip := "eth0 doesn't exists"
 	interfaces, _ := net.Interfaces()
 	for _, i := range interfaces {
 		byNameInterface, _ := net.InterfaceByName(i.Name)
