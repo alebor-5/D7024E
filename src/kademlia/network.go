@@ -17,7 +17,7 @@ func (network *Network) sendUDP(method string, ip string, message []byte) Packet
 	byteArr := EncodePacket(method, network.kademlia.id, network.kademlia.ip, message)
 	RemoteAddr, resAddErr := net.ResolveUDPAddr("udp", ip+":6000")
 	conn, dialErr := net.DialUDP("udp", nil, RemoteAddr)
-	conn.SetDeadline(time.Now().Add(time.Second * 5))
+	conn.SetDeadline(time.Now().Add(time.Millisecond * 50))
 	defer conn.Close()
 	fmt.Println("Sending " + method + " to " + ip)
 	conn.Write(byteArr)
