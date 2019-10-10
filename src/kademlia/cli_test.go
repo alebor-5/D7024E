@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
+	"testing"
 )
 
-func ExampleCLI() {
+func TestCLI(t *testing.T) {
 	node := InitKademliaNode()
 	network := Network{&node}
 	var stdin bytes.Buffer
@@ -21,13 +22,4 @@ func ExampleCLI() {
 		stdin.Write([]byte(str))
 		cli(&stdin, network)
 	}
-
-	// Output:
-	// >Store isn't implemented :(
-	// >put takes exactly 1 argument! e.g. [put "48656c6c6f2066726f6d20414"]
-	// >LookupData isn't implemented :(
-	// >get takes exactly 1 argument! e.g. [get "111.111.111:0000"]
-	// >This will terminate the node. Continue? [y/N]: Termination aborted
-	// >exit doesn't take any arguments!
-	// >Unknown command: superrandomcommandthatdoesnotexist
 }
