@@ -18,5 +18,6 @@ func main() {
 	} else {
 		network = JoinNetwork(bootstrapID, bootstrapIP)
 	}
+	go network.httpListen()
 	network.cliLoop(os.Stdin)
 }
