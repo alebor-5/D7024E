@@ -9,6 +9,8 @@ services:
     networks:
       kademlia-network:
         ipv4_address: 10.0.0.2
+    ports:
+      - 10000:8080
 
   kademlia-node:
     image: kademlia

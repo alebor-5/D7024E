@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -54,7 +55,8 @@ func cli(stdin io.Reader, network Network) {
 		case "get":
 			if strExp.MatchString(args) {
 				hash := args[1 : len(args)-1]
-				if len(hash) == 40 {
+				decoded, err := hex.DecodeString(hash)
+				if len(decoded) == 20 && err == nil {
 					res, gotVal := network.kademlia.LookupData(hash).([]byte)
 					if gotVal {
 						fmt.Println(string(res))
@@ -62,10 +64,10 @@ func cli(stdin io.Reader, network Network) {
 						fmt.Println("Could not find the value belongin to the hash:\n" + hash)
 					}
 				} else {
-					fmt.Println("The hash must be exactly 20 bytes long")
+					fmt.Println("The hash must be represented by exactly 40 hexadecimal characters")
 				}
 			} else {
-				fmt.Println("get takes exactly 1 argument! e.g. [get \"48656c6c6f2066726f6d20414\"]")
+				fmt.Println("get takes exactly 1 argument! e.g. [get \"48656ada39a3ee5e6b4b0d3255bfef95601890af\"]")
 			}
 		case "exit":
 			if spExp.MatchString(args) {
