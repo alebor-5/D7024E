@@ -156,10 +156,29 @@ func (kademlia *Kademlia) StoreData(data []byte) string {
 	net := Network{kademlia}
 	hashValue := hex.EncodeToString(sha1.New().Sum(data)[0:IDLength])
 	targetID := NewKademliaID(hashValue)
-	kademlia.routingTable.mux.Lock()
+	/*kademlia.routingTable.mux.Lock()
 	contacts := kademlia.routingTable.FindClosestContacts(targetID, K)
-	kademlia.routingTable.mux.Unlock()
-	// TODO: contacts := kademlia.LookupContact(targetID)
+	kademlia.routingTable.mux.Unlock()*/
+	contacts := kademlia.LookupContact(targetID)
+	// Check if this node should store
+	selfDistance := kademlia.id.CalcDistance(targetID)
+	for i, c := range contacts {
+		contactDistance := c.ID.CalcDistance(targetID)
+		if selfDistance.Less(contactDistance) {
+			fst := contacts[:i]
+			lst := contacts[i:]
+			lst = lst[:len(lst)-1]
+			lst = append([]Contact{kademlia.routingTable.me}, lst...)
+			contacts = append(fst, lst...)
+			break
+		}
+	}
+
+	if len(contacts) == 0 {
+		contacts = append(contacts, kademlia.routingTable.me)
+	}
+
+	// Send Store to these contacts
 	for _, c := range contacts {
 		go net.SendStoreMessage(data, c)
 	}
