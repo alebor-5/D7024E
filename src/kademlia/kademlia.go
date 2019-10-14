@@ -180,7 +180,11 @@ func (kademlia *Kademlia) StoreData(data []byte) string {
 
 	// Send Store to these contacts
 	for _, c := range contacts {
-		go net.SendStoreMessage(data, c)
+		if c.ID.Equals(&(kademlia.id)) {
+			kademlia.vs.Insert(hashValue, data)
+		} else {
+			go net.SendStoreMessage(data, c)
+		}
 	}
 	return hashValue
 }
