@@ -7,7 +7,7 @@ import (
 )
 
 func TestCLI(t *testing.T) {
-	fmt.Println("ExampleCLI")
+	fmt.Println("*****CLI_Test****")
 	node := InitKademliaNode()
 	network := Network{&node}
 	var stdin bytes.Buffer
